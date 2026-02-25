@@ -31,7 +31,7 @@ const obtenerProducto = async (req = request, res = response) => {
 };
 
 const crearProducto = async (req, res = response) => {
-  const { precio, categoria, descripcion } = req.body;
+  const { precio, categoria, descripcion, img } = req.body;
   const nombre = req.body.nombre.toUpperCase();
   const productoDB = await Producto.findOne({ nombre });
 
@@ -46,6 +46,7 @@ const crearProducto = async (req, res = response) => {
     categoria,
     precio,
     descripcion,
+    img,
     usuario: req.user._id,
   };
 
@@ -58,7 +59,7 @@ const crearProducto = async (req, res = response) => {
 const actualizarProducto = async (req, res) => {
   const { id } = req.params;
 
-  const { precio, categoria, descripcion, disponible } = req.body;
+  const { precio, categoria, descripcion, disponible, img } = req.body;
 
   const usuario = req.user._id;
   let data = {
@@ -66,6 +67,7 @@ const actualizarProducto = async (req, res) => {
     descripcion,
     categoria,
     disponible,
+    img,
     usuario,
   };
 
