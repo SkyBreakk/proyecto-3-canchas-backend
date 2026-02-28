@@ -17,12 +17,12 @@ const router = Router();
 router.get("/prueba", (req, res) => {
   res.send("Aplicación funcionando");
 });
-router.post("/register", registerValidation(), register);
-router.post("/login", loginValidation(), login);
-router.post("/verify-email", verifyEmailValidation(), verifyEmail);
+router.post("/register", ...registerValidation, register);
+router.post("/login", ...loginValidation, login);
+router.post("/verify-email", ...verifyEmailValidation, verifyEmail);
 
 //RUTAS PRIVADAS
-router.post("/logout", (req, res) => {
+router.post("/logout", authenticate, (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
     secure: true,
