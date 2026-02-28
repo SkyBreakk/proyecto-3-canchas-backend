@@ -1,4 +1,4 @@
-import { check, validationResult } from "express-validator";
+import { check, param, validationResult } from "express-validator";
 import User from "../models/User.js";
 import Categoria from "../models/Category.js";
 import Producto from "../models/Product.js";
@@ -15,57 +15,55 @@ const handleValidationErrors = (req, res, next) => {
   next();
 };
 
-const registerValidation = () => [
+const registerValidation = [
   check("username")
     .trim()
     .isLength({ min: 3, max: 30 })
-    .withMessage("Username must be between 3 and 30 characters")
+    .withMessage("El nombre de usuario debe tener entre 3 y 30 carácteres")
     .matches(/^[a-zA-Z0-9_]+$/)
-    .withMessage("Username can only contain letters, numbers, and underscores")
-    .custom(async (value) => {
-      const user = await User.findOne({ value });
-      if (user && user.username === value) {
-        throw new Error("El usuario ya existe");
-      }
+    .withMessage(
+      "El nombre de usuario solo debe contener letras, números y barra bajas",
+    )
+    .custom(async (username) => {
+      const user = await User.findOne({ username });
+      if (user) throw new Error("El usuario ya existe");
     }),
   check("email")
     .trim()
     .isEmail()
-    .withMessage("Please provide a valid email")
-    .custom(async (value) => {
-      const user = await User.findOne({ value });
-      if (user) {
-        throw new Error("El usuario ya existe");
-      }
-    })
-    .normalizeEmail(),
+    .withMessage("Por favor ingrese un correo")
+    .normalizeEmail()
+    .custom(async (email) => {
+      const user = await User.findOne({ email });
+      if (user) throw new Error("El usuario ya existe");
+    }),
   check("password")
     .isLength({ min: 6 })
-    .withMessage("Password must be at least 6 characters")
+    .withMessage("La contraseña debe tener por lo menos 6 carácteres")
     .matches(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/)
     .withMessage(
-      "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      "La contraseña debe contener por lo menos letras, números y simbolos",
     ),
   handleValidationErrors,
 ];
 
-const loginValidation = () => [
+const loginValidation = [
   check("email")
     .trim()
     .isEmail()
-    .withMessage("Please provide a valid email")
+    .withMessage("Por favor ingrese un correo válido")
     .normalizeEmail(),
   check("password").notEmpty().withMessage("Password is required"),
   handleValidationErrors,
 ];
 
-const verifyEmailValidation = () => [
+const verifyEmailValidation = [
   check("email")
     .notEmpty()
-    .withMessage("Email is required")
+    .withMessage("Email es requerido")
     .trim()
     .isEmail()
-    .withMessage("Please provide a valid email")
+    .withMessage("Por favor coloque un correo valido")
     .custom(async (email) => {
       const user = await User.findOne({ email });
       if (user && user.emailVerified) {
@@ -75,102 +73,86 @@ const verifyEmailValidation = () => [
     .normalizeEmail(),
   check("code")
     .notEmpty()
-    .withMessage("Verification code is required")
+    .withMessage("Código de verificación es necesario")
     .trim()
     .isLength({ min: 6, max: 6 })
-    .withMessage("Verification code must be 6 digits")
+    .withMessage("Código de verificación debe tener 6 dígitos")
     .isNumeric()
-    .withMessage("Verification code must be numeric"),
+    .withMessage("Código de verificación debe contener solo números"),
   handleValidationErrors,
 ];
 
-const existeCategoriaPorId = async (id) => {
+const crearProductoValidator = [
+  check("nombre", "El nombre es obligatorio").notEmpty(),
+  check("precio", "El precio no puede ser negativo").isFloat({ min: 0 }),
+  check("categoria")
+    .notEmpty()
+    .withMessage("La categoría es obligatoria")
+    .isMongoId()
+    .withMessage("ID de categoría no valido"),
+  check("stock", "El stock no puede ser menor a 0").isFloat({ min: 0 }),
+  handleValidationErrors,
+];
+
+const actualizarProductoValidator = [
+  param("id").isMongoId().withMessage("ID de producto no válido"),
+  check("precio", "El precio no puede ser negativo").isFloat({ min: 0 }),
+  check("nombre", "El nombre es obligatorio").notEmpty(),
+  check("categoria")
+    .notEmpty()
+    .withMessage("La categoría es obligatoria")
+    .isMongoId()
+    .withMessage("No es un ID de Mongo válido"),
+  check("stock", "El stock no puede ser menor a 0").isFloat({ min: 0 }),
+  handleValidationErrors,
+];
+
+const existeCategoriaPorId = async (id, { req }) => {
   const existeCategoria = await Categoria.findById(id);
   if (!existeCategoria) {
-    throw new Error(`El id ${id} NO existe`);
+    throw new Error(`El ID ${id} NO existe`);
   }
 
-  if (!existeCategoria.estado) {
+  if (req.categoria && !existeCategoria.estado) {
     throw new Error(`La Categoria ${existeCategoria.nombre} está inactiva`);
   }
 };
 
-const validarRol = (req, res, next) => {
-  const rol = req.user.role;
-  if (rol !== "admin") {
-    return res.status(401).json({
-      ok: false,
-      message: "No tiene permisos para realizar la acción",
-    });
-  }
-  next();
-};
-
-const validarIdProducto = async (id) => {
-  const producto = await Producto.findById(id);
-  if (producto) {
-    throw new Error("Producto ya existe");
-  }
-};
-
-const validarProductoParaCarrito = async (productoId) => {
-  const producto = await Producto.findById(productoId);
-
-  if (!producto) {
-    return res.status(404).json({ error: "Producto no encontrado" });
-  }
-
-  if (!producto.disponible) {
-    return res.status(400).json({ error: "Producto no disponible" });
-  }
-};
-
-const validarCart = async (req, res, next) => {
-  console.log(req.user);
-  let cart = await Cart.findOne({ usuario: req.user.id });
-  //si carrito no existe
-  if (!cart) {
-    return res
-      .status(400)
-      .json({ ok: false, message: "Carrito no encontrado" });
-  } else {
-    req.cart = cart;
-  }
-  next();
-};
-
-// 4 - Validación para agregar item al carrito----------------------------------
 const agregarItemCartValidation = () => [
   check("productoId")
-    .notEmpty()
-    .withMessage("Debe proporcionar productoId")
+    .isMongoId()
+    .withMessage("ID no válido")
+    .custom(async (id, { req }) => {
+      const producto = await Producto.findById(id);
 
-    .custom(async (value) => {
-      const producto = await Producto.findById(value);
-      if (!producto) {
-        throw new Error("Producto no encontrado");
-      }
-      if (!producto.disponible) {
-        throw new Error("Producto no disponible");
-      }
+      if (!producto) throw new Error("El producto no existe");
+      if (producto.stock <= 0) throw new Error("Producto no disponible");
+
+      req.productoEncontrado = producto;
+      return true;
     }),
   check("cantidad")
-    .notEmpty()
-    .withMessage("Debe proporcionar cantidad")
     .isInt({ min: 1 })
-    .withMessage("La cantidad debe ser mayor que 0"),
+    .withMessage("La cantidad debe ser mayor a 0")
+    .custom(async (cantidad, { req }) => {
+      const producto = await Producto.findById(req.body.productoId);
+      if (producto && cantidad > producto.stock) {
+        throw new Error(
+          `Stock insuficiente. Solo quedan ${producto.stock} unidades`,
+        );
+      }
+      return true;
+    }),
   handleValidationErrors,
 ];
 
 export {
+  handleValidationErrors,
   registerValidation,
   loginValidation,
   verifyEmailValidation,
-  handleValidationErrors,
+  crearProductoValidator,
+  actualizarProductoValidator,
   existeCategoriaPorId,
-  validarRol,
-  validarIdProducto,
-  validarCart,
   agregarItemCartValidation,
-  validarProductoParaCarrito,
 };
