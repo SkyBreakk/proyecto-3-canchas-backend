@@ -22,6 +22,7 @@ export const authenticate = async (req, res, next) => {
     }
 
     req.user = user;
+    req.usuario = user._id.toString();
     next();
   } catch (error) {
     console.error(error);

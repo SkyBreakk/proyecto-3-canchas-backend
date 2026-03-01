@@ -161,9 +161,6 @@ const agregarItemCartValidation = () => [
 ];
 
 const reservaValidation = () => [
-    check("usaurio")
-        .isMongoId()
-        .withMessage("La id del usuario debe ser valida"),
     check("cancha")
         .isMongoId()
         .withMessage("La id de la cancha debe ser valida"),
@@ -171,10 +168,8 @@ const reservaValidation = () => [
         .isNumeric()
         .withMessage("La seña debe ser numérica"),
     check("fecha")
-        .notEmpty()
-        .withMessage("La fecha de reserva es obligatoria")
-        .isDate()
-        .withMessage("La fecha debe ser valida"),
+        .matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/)
+        .withMessage("El formato de la fecha no esvalido"),
     check("horas")
         .isNumeric()
         .withMessage("La cantidad de horas reservadas debe ser numérica"),
