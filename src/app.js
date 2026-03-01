@@ -31,4 +31,4 @@ app.use("/api/auth", authRoutes);
 app.use("/api/cancha", canchaRoutes);
 app.use("/api/reserva", reservaRoutes);
 
-export default app
+export default app;
