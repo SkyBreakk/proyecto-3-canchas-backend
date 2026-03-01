@@ -1,5 +1,4 @@
 import Cart from "../models/Cart.js";
-import Producto from "../models/Product.js";
 
 export const getCart = async (req, res) => {
   try {
@@ -16,6 +15,11 @@ export const getCart = async (req, res) => {
 
     cart.calcularTotal();
     await cart.save();
+
+    return res.status(200).json({
+      ok: true,
+      cart,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -115,7 +119,6 @@ export const updateCartItem = async (req, res) => {
   }
 };
 
-// Vaciar carrito
 export const clearCart = async (req, res) => {
   try {
     const cart = await Cart.findOne({ usuario: req.user.id });

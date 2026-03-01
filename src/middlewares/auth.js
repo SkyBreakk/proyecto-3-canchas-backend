@@ -5,7 +5,6 @@ export const authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.token;
 
-    // pregunto si viene un token
     if (!token) {
       return res.status(401).json({
         ok: false,

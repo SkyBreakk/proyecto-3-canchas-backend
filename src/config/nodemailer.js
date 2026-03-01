@@ -1,6 +1,5 @@
 import nodemailer from "nodemailer";
 
-//Primer paso es configurar el transporter
 export const createTransporter = () => {
   return nodemailer.createTransport({
     host: process.env.EMAIL_HOST,
@@ -13,7 +12,6 @@ export const createTransporter = () => {
   });
 };
 
-//Armar la función que envía el email de verificacion
 export const sendVerificationEmail = async (
   email,
   username,

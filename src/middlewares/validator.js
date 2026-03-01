@@ -146,6 +146,31 @@ const agregarItemCartValidation = () => [
   handleValidationErrors,
 ];
 
+const reservaValidation = () => [
+  check("usaurio").isMongoId().withMessage("La id del usuario debe ser valida"),
+  check("cancha").isMongoId().withMessage("La id de la cancha debe ser valida"),
+  check("senia").isNumeric().withMessage("La seña debe ser numérica"),
+  check("fecha")
+    .notEmpty()
+    .withMessage("La fecha de reserva es obligatoria")
+    .isDate()
+    .withMessage("La fecha debe ser valida"),
+  check("horas")
+    .isNumeric()
+    .withMessage("La cantidad de horas reservadas debe ser numérica"),
+  handleValidationErrors,
+];
+
+const canchaValidation = () => [
+  check("descripcion")
+    .notEmpty()
+    .withMessage("La descripción de la cancha es obligatoria"),
+  check("precio")
+    .isNumeric()
+    .withMessage("El valor de alquiler de la cancha debe ser numérico"),
+  handleValidationErrors,
+];
+
 export {
   handleValidationErrors,
   registerValidation,
@@ -155,4 +180,6 @@ export {
   actualizarProductoValidator,
   existeCategoriaPorId,
   agregarItemCartValidation,
+  reservaValidation,
+  canchaValidation,
 };

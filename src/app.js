@@ -3,16 +3,15 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import morgan from "morgan";
 
-//import Rutas
 import authRoutes from "./routes/auth.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
-// import searchRoutes from "./routes/search.routes.js";
+import canchaRoutes from "./routes/cancha.routes.js";
+import reservaRoutes from "./routes/reserva.routes.js";
 
 const app = express();
 
-//Middlewares
 app.use(
   cors({
     origin: "http://localhost:9500",
@@ -26,11 +25,11 @@ app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
 app.use(cookieParser());
 
-//Rutas
 app.use("/api/auth", authRoutes);
 app.use("/api/category", categoryRoutes);
 app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
-// app.use("/api/search", searchRoutes);
+app.use("/api/cancha", canchaRoutes);
+app.use("/api/reserva", reservaRoutes);
 
 export default app;

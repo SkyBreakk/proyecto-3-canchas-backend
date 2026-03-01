@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "admin", "superAdmin"],
+      enum: ["user", "premium", "admin"],
       default: "user",
     },
     emailVerified: {
@@ -59,7 +59,7 @@ UserSchema.methods.generateVerificationCode = function () {
 };
 
 UserSchema.methods.comparePassword = function (userPassword) {
-  return bcrypt.compareSync(userPassword, this.password); //
+  return bcrypt.compareSync(userPassword, this.password);
 };
 
 const User = mongoose.model("User", UserSchema);
