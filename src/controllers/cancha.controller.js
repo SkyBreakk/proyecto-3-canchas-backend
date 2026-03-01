@@ -43,6 +43,15 @@ const obtenerCancha = async (req, res) => {
     }
 };
 
+const obtenerCanchasDisponibles = async (req, res) => {
+    const canchasDisponibles = await Cancha.find({ estado: true });
+
+    return res.status(200).json({
+        ok: true,
+        canchasDisponibles
+    })
+}
+
 const updateCancha = async (req, res) => {
     try {
         const { id } = req.params;
@@ -81,6 +90,7 @@ const deleteCancha = async (req, res) => {
 export {
     registerCancha,
     obtenerCancha,
+    obtenerCanchasDisponibles,
     updateCancha,
     deleteCancha
 }

@@ -16,8 +16,8 @@ const ReservaSchema = Schema({
         default: 0
     },
     fecha: {
-        type: Date,
-        default: new Date
+        type: String,
+        required: true
     },
     horas: {
         type: Number,
@@ -29,20 +29,14 @@ const ReservaSchema = Schema({
     }
 }, { timestamps: true });
 
-ReservaSchema.methods.confirmarReserva = function (auxFecha, auxHora) {
-    if(auxFecha === this.fecha){
-        return false
-    }
-    /*
-    if (auxFecha.getFullYear() == this.fecha.getFullYear() &&
-        auxFecha.getMonth() == this.fecha.getMonth() &&
-        auxFecha.getDate() == this.fecha.getDate() &&
-        this.fecha.getHours() == auxFecha.getHours() &&
-        parseFloat(this.fecha.getHours()) + this.horas < auxFecha.getHours()) {
-        return false
-    }
-    */
-    return true
+ReservaSchema.methods.controlSolapamiento = function (nuevaFecha, nuevaHora) {
+    const inicioNuevo = new Date(nuevaFecha).getTime();
+    const finNuevo = inicioNuevo + (Number(nuevaHora) * 60 * 60 * 1000);
+    const inicioExistente = new Date(this.fecha).getTime();
+    const finExistente = inicioExistente + (this.horas * 60 * 60 * 1000);
+
+    return inicioNuevo < finExistente && finNuevo > inicioExistente;
 }
+
 
 export default model("Reserva", ReservaSchema)

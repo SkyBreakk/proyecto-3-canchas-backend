@@ -8,15 +8,17 @@ import {
 import {
     registerCancha,
     obtenerCancha,
+    obtenerCanchasDisponibles,
     updateCancha,
     deleteCancha
 } from "../controllers/cancha.controller.js"
 
 const router = Router();
 
-router.post("/register",authenticate,canchaValidation(),registerCancha);
-router.get("/:id",authenticate,obtenerCancha);
-router.put("/update/:id",authenticate,updateCancha);
-router.delete("/:id",authenticate,deleteCancha);
+router.post("/register", authenticate, canchaValidation(), registerCancha);
+router.get("/:id", authenticate, obtenerCancha);
+router.get("/", authenticate, obtenerCanchasDisponibles);
+router.put("/update/:id", authenticate, updateCancha);
+router.delete("/:id", authenticate, deleteCancha);
 
 export default router;

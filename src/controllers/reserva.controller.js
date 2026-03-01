@@ -1,63 +1,80 @@
-import User from "../models/User.js";
 import Cancha from "../models/Cancha.js";
 import Reserva from "../models/Reserva.js";
 
 const registerReserva = async (req, res) => {
-    // "yyyy-mm-ddThh:mm:ss"
-    const { senia, fecha, horas, cancha } = req.body;
-    const canchaBD = await Cancha.findById(cancha);
-    if (!canchaBD) {
-        res.status(400).json({
-            ok: false,
-            message: "la cancha no existe"
-        })
-    }
-    const bandera = true;
-    const reservaBD = await Reserva.find({ cancha });
-    reservaBD.forEach(function (auxReserva) {
-        if (auxReserva.confirmarReserva(fecha, horas) == false) {
-            bandera = false
+    try {
+        const { senia, horas, cancha, fecha } = req.body;
+
+        let fechaLimpia = new Date(fecha.replace("Z", ""));
+        const fechaLocal = new Date(
+            fechaLimpia.getFullYear(),
+            fechaLimpia.getMonth(),
+            fechaLimpia.getDate(),
+            fechaLimpia.getHours(),
+            fechaLimpia.getMinutes()
+        );
+        
+        const canchaBD = await Cancha.findById(cancha);
+        if (!canchaBD) {
+            return res.status(404).json({
+                ok: false,
+                message: "la cancha no existe"
+            })
         }
-    });
-    if (bandera == false) {
+        const reservasBD = await Reserva.find({ estado: true, cancha });
+        const reservaSolapada = reservasBD.some((reservaBD) => {
+            return reservaBD.controlSolapamiento(fechaLocal, horas);
+        });
+        if (reservaSolapada) {
+            return res.status(400).json({
+                ok: false,
+                message: "Horario ocupado"
+            })
+        }
+        const reserva = new Reserva({
+            usuario: req.user._id,
+            cancha,
+            senia,
+            fecha: fechaLocal.toString(),
+            horas
+        });
+        await reserva.save();
+        return res.status(201).json({
+            ok: true,
+            message: "Reserva creada con exito",
+        })
+    } catch (error) {
         res.status(400).json({
-            ok: false,
-            error: "La cancha no esta disponible en el horario requerido"
+            error: error.message
         })
     }
-    const reserva = new Reserva({
-        usuario: req.user._id,
-        cancha,
-        senia,
-        fecha,
-        //fecha: new Date(fecha.getFullYear(), fecha.getMonth() + 1, fecha.getDate(), fecha.getHours(), 0, 0),
-        horas
-    });
-    await reserva.save();
-    res.status(201).json({
-        ok: true,
-        message: "Reserva creada con exito",
-    })
 };
 
 const getReserva = async (req, res) => {
-    const { id } = req.params;
-    const reservaBD = await Reserva.findById(id);
-    if (!reservaBD) {
-        res.status(400).json({
-            ok: false,
-            message: "La reserva no existe"
+    try {
+        const { id } = req.params;
+        const reservaBD = await Reserva.findOne({ _id: id, estado: true });
+        if (!reservaBD) {
+            return res.status(404).json({
+                ok: false,
+                message: "La reserva no existe"
+            })
+        }
+        return res.status(200).json({
+            ok: true,
+            reservaBD
         })
+    } catch (error) {
+        res.status(500).json({
+            ok: false,
+            message: "Error al buscar la reserva"
+        });
     }
-    res.status(200).json({
-        ok: true,
-        reservaBD
-    })
 };
 
 const deleteReserva = async (req, res) => {
     const { id } = req.params;
-    const reservaBD = await Reserva.findByIdAndUpdate(id, { estado: false }, { news: true });
+    const reservaBD = await Reserva.findByIdAndUpdate(id, { estado: false }, { new: true });
     res.status(200).json({
         ok: true,
         message: "Reserva eliminada",

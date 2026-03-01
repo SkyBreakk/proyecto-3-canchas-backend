@@ -171,8 +171,10 @@ const reservaValidation = () => [
         .isNumeric()
         .withMessage("La seña debe ser numérica"),
     check("fecha")
+        .notEmpty()
+        .withMessage("La fecha de reserva es obligatoria")
         .isDate()
-        .withMessage("La fecha de reserva debe ser valida"),
+        .withMessage("La fecha debe ser valida"),
     check("horas")
         .isNumeric()
         .withMessage("La cantidad de horas reservadas debe ser numérica"),

@@ -1,6 +1,6 @@
 import { Schema, model } from "mongoose";
 
-const canchaSchemna = Schema({
+const canchaSchema = Schema({
     descripcion: {
         type: String,
         required: true
@@ -21,4 +21,4 @@ const canchaSchemna = Schema({
 
 });
 
-export default model("Cancha", canchaSchemna);
+export default model("Cancha", canchaSchema);
