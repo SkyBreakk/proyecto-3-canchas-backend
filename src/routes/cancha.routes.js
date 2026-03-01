@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { authenticate } from "../middlewares/auth.js";
+import { authenticate, validarRol } from "../middlewares/auth.js";
 import { canchaValidation } from "../middlewares/validator.js";
 import {
   registerCancha,
@@ -13,8 +13,12 @@ const router = Router();
 
 router.get("/:id", authenticate, obtenerCancha);
 router.get("/", authenticate, obtenerCanchasDisponibles);
-router.post("/register", authenticate, ...canchaValidation(), registerCancha);
-router.put("/update/:id", authenticate, updateCancha);
-router.delete("/:id", authenticate, deleteCancha);
+router.post(
+  "/register",
+  [authenticate, validarRol, ...canchaValidation()],
+  registerCancha,
+);
+router.put("/update/:id", [authenticate, validarRol], updateCancha);
+router.delete("/:id", [authenticate, validarRol], deleteCancha);
 
 export default router;

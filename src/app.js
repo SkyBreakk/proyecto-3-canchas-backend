@@ -7,7 +7,6 @@ import authRoutes from "./routes/auth.routes.js";
 import categoryRoutes from "./routes/category.routes.js";
 import productRoutes from "./routes/product.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
-
 import canchaRoutes from "./routes/cancha.routes.js";
 import reservaRoutes from "./routes/reserva.routes.js";
 
@@ -27,7 +26,9 @@ app.use(morgan("dev"));
 app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
-
+app.use("/api/category", categoryRoutes);
+app.use("/api/product", productRoutes);
+app.use("/api/cart", cartRoutes);
 app.use("/api/cancha", canchaRoutes);
 app.use("/api/reserva", reservaRoutes);
 

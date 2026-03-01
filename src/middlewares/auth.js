@@ -31,3 +31,14 @@ export const authenticate = async (req, res, next) => {
     });
   }
 };
+
+export const validarRol = (req, res, next) => {
+  const rol = req.user.role;
+  if (rol !== "admin") {
+    return res.status(401).json({
+      ok: false,
+      message: "No tiene permisos para realizar la acción",
+    });
+  }
+  next();
+};
