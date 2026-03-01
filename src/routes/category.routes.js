@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { check } from "express-validator";
-import { authenticate } from "../middlewares/auth.js";
+import { authenticate, validarRol } from "../middlewares/auth.js";
 import {
   existeCategoriaPorId,
   handleValidationErrors,
@@ -18,6 +18,7 @@ router.post(
   "/",
   [
     authenticate,
+    validarRol,
     check("nombre", "El nombre es obligatorio").notEmpty(),
     handleValidationErrors,
   ],
@@ -27,6 +28,7 @@ router.put(
   "/:id",
   [
     authenticate,
+    validarRol,
     check("id", "El id es requerido y debe ser válido").isMongoId(),
     check("nombre", "El nombre es obligatorio").notEmpty(),
     check("id").custom(existeCategoriaPorId),
@@ -38,6 +40,7 @@ router.delete(
   "/:id",
   [
     authenticate,
+    validarRol,
     check("id", "El id no es válido").isMongoId(),
     check("id").custom(existeCategoriaPorId),
     handleValidationErrors,

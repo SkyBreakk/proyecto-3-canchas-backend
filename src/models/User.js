@@ -20,10 +20,10 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    rol: {
+    role: {
       type: String,
-      enum: ["usuario", "premium", "admin"],
-      default: "usuario",
+      enum: ["user", "premium", "admin"],
+      default: "user",
     },
     emailVerified: {
       type: Boolean,
