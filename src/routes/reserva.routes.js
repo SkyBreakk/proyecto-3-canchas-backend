@@ -1,9 +1,6 @@
 import { Router } from "express";
 import { authenticate, validarRol } from "../middlewares/auth.js";
 import {
-    authenticate
-} from "../middlewares/auth.js"
-import {
     reservaValidation
 } from "../middlewares/validator.js";
 import {
