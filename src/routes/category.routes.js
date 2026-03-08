@@ -13,7 +13,7 @@ import {
 } from "../controllers/category.controller.js";
 const router = Router();
 
-router.get("/", authenticate, traerCategorias);
+router.get("/", traerCategorias);
 router.post(
   "/",
   [

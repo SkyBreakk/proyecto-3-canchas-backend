@@ -54,6 +54,57 @@ const registerReserva = async (req, res) => {
   }
 };
 
+const checkDisponibilidad = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fecha, horas } = req.body;
+
+    if (!id || !fecha || !horas) {
+      return res.status(400).json({
+        ok: false,
+        message: "Faltan datos necesarios (cancha, fecha o horas)",
+      });
+    }
+
+    let fechaLimpia = new Date(fecha.replace("Z", ""));
+    const fechaConsulta = new Date(
+      fechaLimpia.getFullYear(),
+      fechaLimpia.getMonth(),
+      fechaLimpia.getDate(),
+      fechaLimpia.getHours(),
+      fechaLimpia.getMinutes(),
+    );
+
+    const reservasBD = await Reserva.find({ estado: true, cancha: id });
+
+    const reservaTemporal = new Reserva();
+
+    const ocupado = reservasBD.some((reservaBD) => {
+      return reservaBD.controlSolapamiento(fechaConsulta, horas);
+    });
+
+    if (ocupado) {
+      return res.status(200).json({
+        ok: false,
+        disponible: false,
+        message: "El horario seleccionado ya está ocupado",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      disponible: true,
+      message: "El horario está disponible",
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: "Error al verificar disponibilidad",
+      error: error.message,
+    });
+  }
+};
+
 const getReserva = async (req, res) => {
   try {
     const { id } = req.params;
@@ -92,4 +143,4 @@ const deleteReserva = async (req, res) => {
   });
 };
 
-export { registerReserva, getReserva, deleteReserva };
+export { registerReserva, checkDisponibilidad, getReserva, deleteReserva };
