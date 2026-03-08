@@ -50,7 +50,7 @@ const obtenerCancha = async (req, res) => {
 
 const obtenerCanchasDisponibles = async (req, res) => {
   const { limite = 5, desde = 0 } = req.query;
-  const query = { disponible: true };
+  const query = { estado: true };
 
   const [total, canchas] = await Promise.all([
     Cancha.countDocuments(query),
