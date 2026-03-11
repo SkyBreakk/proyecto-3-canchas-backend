@@ -163,4 +163,25 @@ const getProfile = async (req, res) => {
   }
 };
 
-export { register, login, verifyEmail, getProfile };
+ const getUserByEmail = async (req, res) => {
+  try {
+
+    const { email } = req.params;
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario no registrado"
+      });
+    }
+
+    res.json(user);
+
+  } catch (error) {
+    res.status(500).json({
+      message: "Error del servidor"
+    });
+  }
+};
+export { register, login, verifyEmail, getProfile, getUserByEmail};
