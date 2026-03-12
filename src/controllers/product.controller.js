@@ -1,4 +1,5 @@
 import Producto from "../models/Product.js";
+import Categoria from "../models/Category.js";
 
 const obtenerProductos = async (req = request, res = response) => {
   const { limite = 5, desde = 0 } = req.query;
@@ -62,11 +63,21 @@ const actualizarProducto = async (req, res) => {
 
   const { precio, categoria, descripcion, stock, img } = req.body;
 
+  const categoriaBD = Categoria.findOne({ nombre: categoria });
+
+  if (!categoriaBD) {
+
+    return res.status(404).json({
+      msg: `La categoria ${categoria} no existe`
+    })
+  }
+
   const usuario = req.user._id;
+
   let data = {
     precio,
     descripcion,
-    categoria,
+    categoria: categoriaBD._id,
     stock,
     img,
     usuario,

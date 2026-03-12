@@ -50,7 +50,7 @@ const obtenerCancha = async (req, res) => {
 
 const obtenerCanchasDisponibles = async (req, res) => {
   const { limite = 5, desde = 0 } = req.query;
-  const query = { disponible: true };
+  const query = { estado: true };
 
   const [total, canchas] = await Promise.all([
     Cancha.countDocuments(query),
@@ -69,27 +69,45 @@ const obtenerCanchasDisponibles = async (req, res) => {
 const updateCancha = async (req, res) => {
   try {
     const { id } = req.params;
-    const { descripcion, precio, img } = req.body;
-    const usuario = req.user._id;
+    const { descripcion, precio, img, nombre } = req.body;
+    const user = req.user;
+
+    const nombreBD = await Cancha.findOne({ nombre: nombre.toUpperCase(), estado: true, _id: { $ne: id } });
+
+    if (nombreBD) {
+      return res.status(400).json({
+        ok: false,
+        message: "El nombre coincide con otra cancha"
+      })
+    };
 
     let data = {
+      nombre: nombre ? nombre.toUpperCase() : undefined,
       descripcion,
       precio,
       img,
-      usuario,
+      usuario: user._id
     };
-
-    if (req.body.nombre) {
-      data.nombre = req.body.nombre.toUpperCase();
-    }
 
     const cancha = await Cancha.findByIdAndUpdate(id, data, { new: true });
 
-    res.status(201).json(cancha);
+    if (!cancha) {
+      return res.status(404).json({
+        ok: false,
+        message: "No se encontró la cancha en el servidor",
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: "Cancha actualizada con exito",
+      cancha
+    });
   } catch (error) {
-    res.status(400).json({
+    console.error(error);
+    res.status(500).json({
       ok: false,
-      message: "La cancha no existe",
+      error: error.message
     });
   }
 };
@@ -102,15 +120,22 @@ const deleteCancha = async (req, res) => {
       { estado: false },
       { new: true },
     );
+    if (!canchaBD) {
+      return res.status(404).json({
+        ok: false,
+        message: "No se encontró la cancha",
+      });
+    }
     res.status(200).json({
       ok: true,
       message: "Cancha eliminada con exito",
       canchaBD,
     });
   } catch (error) {
-    res.status(400).json({
+    console.log(error);
+    res.status(500).json({
       ok: false,
-      message: "La cancha no existe",
+      message: error.message
     });
   }
 };
