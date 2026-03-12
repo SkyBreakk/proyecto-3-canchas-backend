@@ -163,4 +163,48 @@ const getProfile = async (req, res) => {
   }
 };
 
-export { register, login, verifyEmail, getProfile };
+const getUsersPaginado = async (req, res) => {
+  const { limite = 5, desde = 0 } = req.query;
+  const query = { state: true };
+
+  const [total, users] = await Promise.all([
+    User.countDocuments(query),
+    User.find(query)
+      .skip(Number(desde))
+      .limit(Number(limite))
+  ]);
+
+  res.status(200).json({
+    total,
+    users,
+  });
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const usuario = await User.findByIdAndUpdate(id, { state: false }, { new: true });
+
+    if (!usuario) {
+      return res.status(404).json({ message: 'Usuario no encontrado' });
+    }
+
+    res.json({
+      message: 'Usuario desactivado correctamente',
+      usuario
+    });
+
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ message: 'Error en el borrado de usuario' });
+  }
+};
+
+export {
+  register,
+  login,
+  verifyEmail,
+  getProfile,
+  getUsersPaginado,
+  deleteUser
+};
