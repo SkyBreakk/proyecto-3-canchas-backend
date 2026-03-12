@@ -143,4 +143,29 @@ const deleteReserva = async (req, res) => {
   });
 };
 
-export { registerReserva, checkDisponibilidad, getReserva, deleteReserva };
+const getReservasDisponibles = async (req, res) => {
+  const { limite = 5, desde = 0 } = req.query;
+  const query = { estado: true };
+
+  const [total, reservas] = await Promise.all([
+    Reserva.countDocuments(query),
+    Reserva.find(query)
+      .skip(desde)
+      .limit(limite)
+      .populate("usuario", "username")
+      .populate("cancha","nombre"),
+  ]);
+
+  res.status(200).json({
+    total,
+    reservas,
+  });
+};
+
+export {
+  registerReserva, 
+  checkDisponibilidad, 
+  getReserva, 
+  deleteReserva,
+  getReservasDisponibles 
+};

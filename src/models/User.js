@@ -25,6 +25,10 @@ const UserSchema = new mongoose.Schema(
       enum: ["user", "premium", "admin"],
       default: "user",
     },
+    state: {
+      type: Boolean,
+      default: true
+    },
     emailVerified: {
       type: Boolean,
       default: false,

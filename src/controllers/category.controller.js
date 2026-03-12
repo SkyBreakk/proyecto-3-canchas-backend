@@ -78,9 +78,29 @@ const eliminarCategoria = async (req, res) => {
   });
 };
 
+const traerCategoriasPaginado = async (req, res) => {
+
+  const { limite = 5, desde = 0 } = req.query;
+  const query = { estado: true };
+
+  const [total, categorias] = await Promise.all([
+    Categoria.countDocuments(query),
+    Categoria.find(query)
+      .skip(Number(desde))
+      .limit(Number(limite))
+      .populate("usuario", "username")
+  ]);
+
+  res.json({
+    total,
+    categorias,
+  });
+};
+
 export {
   traerCategorias,
   crearCategoria,
   actualizarCategoria,
   eliminarCategoria,
+  traerCategoriasPaginado
 };
