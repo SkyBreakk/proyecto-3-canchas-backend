@@ -163,6 +163,25 @@ const getProfile = async (req, res) => {
   }
 };
 
+ const getUserByEmail = async (req, res) => {
+  try {
+    const { email } = req.params;
+    const user = await User.findOne({ email });
+    
+    if (!user) {
+      return res.status(404).json({
+        message: "Usuario no registrado"
+      });
+    }
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({
+      message: "Error del servidor"
+    });
+  }
+};
+
 const getUsersPaginado = async (req, res) => {
   const { limite = 5, desde = 0 } = req.query;
   const query = { state: true };
@@ -206,5 +225,6 @@ export {
   verifyEmail,
   getProfile,
   getUsersPaginado,
-  deleteUser
+  deleteUser,
+  getUserByEmail
 };
