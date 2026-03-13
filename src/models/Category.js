@@ -15,6 +15,6 @@ const CategoriaSchema = Schema({
     type: Schema.Types.ObjectId,
     ref: "User",
   },
-});
+}, { timestamps: true });
 
 export default model("Categoria", CategoriaSchema);

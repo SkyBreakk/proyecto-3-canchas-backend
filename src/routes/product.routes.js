@@ -11,10 +11,10 @@ const router = Router();
 
 import {
   obtenerProductos,
+  obtenerProducto,
   crearProducto,
   actualizarProducto,
   borrarProducto,
-  obtenerProducto,
 } from "../controllers/product.controller.js";
 
 router.get("/", obtenerProductos);

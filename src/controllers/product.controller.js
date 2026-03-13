@@ -49,7 +49,7 @@ const crearProducto = async (req, res = response) => {
     descripcion,
     stock,
     img,
-    usuario: req.user._id,
+    usuario: req.user,
   };
 
   const producto = new Producto(data);
@@ -63,7 +63,7 @@ const actualizarProducto = async (req, res) => {
 
   const { precio, categoria, descripcion, stock, img } = req.body;
 
-  const categoriaBD = Categoria.findOne({ nombre: categoria });
+  const categoriaBD = await Categoria.findOne({ nombre: categoria });
 
   if (!categoriaBD) {
 
@@ -89,7 +89,7 @@ const actualizarProducto = async (req, res) => {
 
   const producto = await Producto.findByIdAndUpdate(id, data, { new: true });
 
-  res.status(201).json(producto);
+  res.status(200).json(producto);
 };
 
 const borrarProducto = async (req, res) => {

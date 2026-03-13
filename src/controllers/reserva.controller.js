@@ -14,14 +14,14 @@ const registerReserva = async (req, res) => {
       fechaLimpia.getMinutes(),
     );
 
-    const canchaBD = await Cancha.findById(cancha);
+    const canchaBD = await Cancha.findOne({ estado: true, nombre: cancha });
     if (!canchaBD) {
       return res.status(404).json({
         ok: false,
-        message: "la cancha no existe",
+        message: `La cancha ${cancha} no existe`,
       });
     }
-    const reservasBD = await Reserva.find({ estado: true, cancha });
+    const reservasBD = await Reserva.find({ estado: true, cancha: canchaBD._id });
     const reservaSolapada = reservasBD.some((reservaBD) => {
       return reservaBD.controlSolapamiento(fechaLocal, horas);
     });
@@ -34,21 +34,24 @@ const registerReserva = async (req, res) => {
 
     const data = {
       usuario: req.user._id,
-      cancha,
+      cancha: canchaBD._id,
       senia,
-      fecha: fechaLocal.toString(),
-      horas,
+      fecha: fechaLocal.toISOString(),
+      horas: Number(horas)
     };
 
     const reserva = new Reserva(data);
     await reserva.save();
+
     return res.status(201).json({
       ok: true,
       message: "Reserva creada con exito",
-      data,
+      reserva,
     });
   } catch (error) {
-    res.status(400).json({
+    console.error(error);
+    res.status(500).json({
+      ok: false,
       error: error.message,
     });
   }
@@ -153,7 +156,7 @@ const getReservasDisponibles = async (req, res) => {
       .skip(desde)
       .limit(limite)
       .populate("usuario", "username")
-      .populate("cancha","nombre"),
+      .populate("cancha", "nombre"),
   ]);
 
   res.status(200).json({
@@ -163,9 +166,9 @@ const getReservasDisponibles = async (req, res) => {
 };
 
 export {
-  registerReserva, 
-  checkDisponibilidad, 
-  getReserva, 
+  registerReserva,
+  checkDisponibilidad,
+  getReserva,
   deleteReserva,
-  getReservasDisponibles 
+  getReservasDisponibles
 };

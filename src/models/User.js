@@ -26,7 +26,7 @@ const UserSchema = new mongoose.Schema(
       default: "user",
     },
     state: {
-      typr: Boolean,
+      type: Boolean,
       default: true
     },
     emailVerified: {

@@ -6,10 +6,11 @@ import {
   handleValidationErrors,
 } from "../middlewares/validator.js";
 import {
-  actualizarCategoria,
-  crearCategoria,
   traerCategorias,
+  crearCategoria,
+  actualizarCategoria,
   eliminarCategoria,
+  traerCategoriasPaginado
 } from "../controllers/category.controller.js";
 const router = Router();
 
@@ -47,5 +48,6 @@ router.delete(
   ],
   eliminarCategoria,
 );
+router.get("/page",authenticate,traerCategoriasPaginado);
 
 export default router;
