@@ -32,64 +32,64 @@ const obtenerProducto = async (req = request, res = response) => {
 };
 
 const crearProducto = async (req, res = response) => {
-  const { precio, categoria, descripcion, stock, img } = req.body;
-  const nombre = req.body.nombre.toUpperCase();
-  const productoDB = await Producto.findOne({ nombre });
+  try {
+    const { precio, categoria, descripcion, stock, img, nombre } = req.body;
+    const nombreUpper = nombre.toUpperCase();
 
-  if (productoDB) {
-    return res.status(400).json({
-      msg: `El producto ${productoDB.nombre} ya existe`,
-    });
+    const productoDB = await Producto.findOne({ nombre: nombreUpper });
+    if (productoDB) {
+      return res
+        .status(400)
+        .json({ msg: `El producto ${productoDB.nombre} ya existe` });
+    }
+
+    const data = {
+      nombre: nombreUpper,
+      categoria,
+      precio: Number(precio),
+      descripcion,
+      stock: Number(stock),
+      img,
+      usuario: req.user._id,
+    };
+
+    const producto = new Producto(data);
+    await producto.save();
+    res.status(201).json(producto);
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ msg: "Error interno del servidor" });
   }
-
-  const data = {
-    nombre,
-    categoria,
-    precio,
-    descripcion,
-    stock,
-    img,
-    usuario: req.user._id,
-  };
-
-  const producto = new Producto(data);
-  await producto.save();
-
-  res.status(201).json(producto);
 };
 
 const actualizarProducto = async (req, res) => {
   const { id } = req.params;
+  const { precio, categoria, descripcion, stock, img, nombre } = req.body;
 
-  const { precio, categoria, descripcion, stock, img } = req.body;
-
-  const categoriaBD = Categoria.findOne({ nombre: categoria });
-
+  const categoriaBD = await Categoria.findById(categoria);
   if (!categoriaBD) {
-
-    return res.status(404).json({
-      msg: `La categoria ${categoria} no existe`
-    })
+    return res
+      .status(404)
+      .json({ msg: `La categoria con ID ${categoria} no existe` });
   }
-
-  const usuario = req.user._id;
 
   let data = {
-    precio,
+    precio: Number(precio),
     descripcion,
     categoria: categoriaBD._id,
-    stock,
+    stock: Number(stock),
     img,
-    usuario,
+    usuario: req.user._id,
   };
 
-  if (req.body.nombre) {
-    data.nombre = req.body.nombre.toUpperCase();
+  if (nombre) data.nombre = nombre.toUpperCase();
+
+  try {
+    const producto = await Producto.findByIdAndUpdate(id, data, { new: true });
+    res.status(200).json(producto);
+  } catch (error) {
+    res.status(500).json({ msg: "Error al actualizar" });
   }
-
-  const producto = await Producto.findByIdAndUpdate(id, data, { new: true });
-
-  res.status(201).json(producto);
 };
 
 const borrarProducto = async (req, res) => {
