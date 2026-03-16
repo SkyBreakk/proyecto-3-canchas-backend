@@ -147,19 +147,34 @@ const agregarItemCartValidation = () => [
 ];
 
 const reservaValidation = () => [
-    check("cancha")
-        .isMongoId()
-        .withMessage("La id de la cancha debe ser valida"),
-    check("senia")
-        .isNumeric()
-        .withMessage("La seña debe ser numérica"),
-    check("fecha")
-        .matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/)
-        .withMessage("El formato de la fecha no esvalido"),
-    check("horas")
-        .isNumeric()
-        .withMessage("La cantidad de horas reservadas debe ser numérica"),
-    handleValidationErrors
+  check("cancha").isMongoId().withMessage("La id de la cancha debe ser valida"),
+  check("senia").isNumeric().withMessage("La seña debe ser numérica"),
+  check("fecha")
+    .matches(
+      /^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])T([01]\d|2[0-3]):[0-5]\d:[0-5]\d$/,
+    )
+    .withMessage("El formato de la fecha no esvalido"),
+  check("horas")
+    .isNumeric()
+    .withMessage("La cantidad de horas reservadas debe ser numérica"),
+  handleValidationErrors,
+];
+
+const contactoValidation = [
+  check("nombre")
+    .trim()
+    .isLength({ min: 5, max: 200 })
+    .withMessage("El nombre de usuario debe tener entre 5 y 30 carácteres"),
+  check("contacto")
+    .trim()
+    .isEmail()
+    .withMessage("Por favor ingrese un correo válido")
+    .normalizeEmail(),
+  check("descripcion")
+    .trim()
+    .isLength({ min: 5, max: 200 })
+    .withMessage("El mensaje debe tener entre 5 y 30 carácteres"),
+  handleValidationErrors,
 ];
 
 const canchaValidation = () => [
@@ -182,5 +197,6 @@ export {
   existeCategoriaPorId,
   agregarItemCartValidation,
   reservaValidation,
+  contactoValidation,
   canchaValidation,
 };
