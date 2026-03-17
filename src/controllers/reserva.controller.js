@@ -1,3 +1,4 @@
+import { sendContactEmail } from "../config/nodemailer.js";
 import Cancha from "../models/Cancha.js";
 import Reserva from "../models/Reserva.js";
 
@@ -162,6 +163,33 @@ const getReservasDisponibles = async (req, res) => {
   });
 };
 
+export const contactoReserva = async (req, res) => {
+  const { nombre, contacto, descripcion } = req.body;
+
+  if (!nombre || !contacto) {
+    return res.status(400).json({
+      status: "error",
+      message: "Nombre y contacto son campos obligatorios.",
+    });
+  }
+
+  try {
+    await sendContactEmail(nombre, contacto, descripcion);
+    return res.status(200).json({
+      ok: true,
+      message:
+        "Tu consulta ha sido enviada con éxito. Nos contactaremos pronto.",
+    });
+  } catch (error) {
+    console.error("Error al enviar el correo:", error);
+    return res.status(500).json({
+      ok: false,
+      message:
+        "Hubo un problema al enviar el correo. Intenta de nuevo más tarde.",
+    });
+  }
+};
+
 const getReservasPorUsuario = async (req, res) => {
   try {
     const usuarioId = req.user._id;
@@ -170,7 +198,7 @@ const getReservasPorUsuario = async (req, res) => {
       usuario: usuarioId,
       estado: true,
     })
-      .populate("cancha", "nombre img precio") 
+      .populate("cancha", "nombre img precio")
       .sort({ fecha: -1 });
 
     res.json({

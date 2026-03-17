@@ -38,3 +38,27 @@ export const sendVerificationEmail = async (
     console.error("Error al enviar el email:", error);
   }
 };
+
+export const sendContactEmail = async (nombre, contacto, descripcion) => {
+  const transporter = createTransporter();
+
+  const mailOptions = {
+    from: process.env.EMAIL_FROM,
+    to: process.env.EMAIL_USER,
+    subject: `⚽ Nueva Consulta de Reserva: ${nombre}`,
+    html: `
+      <div style="font-family: sans-serif; color: #333;">
+        <h2 style="color: #1e7e34;">Nueva solicitud de contacto</h2>
+        <p><strong>Nombre:</strong> ${nombre}</p>
+        <p><strong>Email de contacto:</strong> ${contacto}</p>
+        <hr />
+        <p><strong>Mensaje/Descripción:</strong></p>
+        <p style="background-color: #f4f4f4; padding: 15px; border-radius: 5px;">${descripcion}</p>
+        <hr />
+        <p style="font-size: 12px; color: #888;">Este mensaje fue enviado desde el formulario de contacto de Zona5.</p>
+      </div>
+    `,
+  };
+
+  return transporter.sendMail(mailOptions);
+};

@@ -27,7 +27,6 @@ const register = async (req, res) => {
       data: {
         username: user.username,
         email: user.email,
-        code: verificationCode,
       },
     });
   } catch (error) {
@@ -163,9 +162,8 @@ const getProfile = async (req, res) => {
   }
 };
 
- const loginWithGoogle = async (req, res) => {
+const loginWithGoogle = async (req, res) => {
   try {
-
     const { email } = req.body;
 
     const user = await User.findOne({ email });
@@ -173,14 +171,14 @@ const getProfile = async (req, res) => {
     if (!user) {
       return res.status(404).json({
         ok: false,
-        message: "Usuario no registrado"
+        message: "Usuario no registrado",
       });
     }
 
     if (!user.emailVerified) {
       return res.status(403).json({
         ok: false,
-        message: "El email no está verificado"
+        message: "El email no está verificado",
       });
     }
 
@@ -190,23 +188,20 @@ const getProfile = async (req, res) => {
       httpOnly: true,
       secure: true,
       sameSite: "lax",
-      maxAge: 60 * 60 * 1000
+      maxAge: 60 * 60 * 1000,
     };
 
     res.cookie("token", token, cookieOptions);
 
     return res.status(200).json({
       ok: true,
-      message: "Login con Google exitoso"
+      message: "Login con Google exitoso",
     });
-
   } catch (error) {
-
     return res.status(500).json({
       ok: false,
-      error: error.message
+      error: error.message,
     });
-
   }
 };
 
@@ -294,5 +289,5 @@ export {
   getUsersPaginado,
   deleteUser,
   updateProfile,
-  loginWithGoogle
+  loginWithGoogle,
 };
