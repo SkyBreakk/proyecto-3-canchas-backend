@@ -24,6 +24,16 @@ const ReservaSchema = Schema(
       type: Number,
       default: 2,
     },
+    estadoPago: {
+      type: String,
+      enum: ["Pendiente", "Pagado"],
+      default: "Pendiente",
+    },
+    metodoPago: {
+      type: String,
+      enum: ["Efectivo", "MercadoPago", "Transferencia", "A confirmar"],
+      default: "A confirmar", 
+    },
     estado: {
       type: Boolean,
       default: true,
