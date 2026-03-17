@@ -2,7 +2,7 @@ import { MercadoPagoConfig, Preference } from "mercadopago";
 
 const createPayment = async (req, res) => {
   try {
-    const { titulo, cantidad, precio } = req.body;
+    const { titulo, cantidad, precio,reservaId } = req.body;
     const client = new MercadoPagoConfig({accessToken: process.env.MP_ACCESS_TOKEN,});
 
     const preference = new Preference(client);
@@ -13,14 +13,16 @@ const createPayment = async (req, res) => {
           {
             title: titulo,
             quantity: cantidad,
-            unit_price: precio,
+            unit_price: Number(precio),
           },
         ],
-        back_url: {
-          success: "http://localhost:4500/success",
-          failure: "http://localhost:4500/failure",
-          pending: "http://localhost:4500/pending",
+        back_urls: {
+          success: "http://localhost:9500/success",
+          failure: "http://localhost:9500/failure",
+          pending: "http://localhost:9500/pending",
         },
+        // auto_return: "approved",
+        external_reference: reservaId,
       },
     });
 
