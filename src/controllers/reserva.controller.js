@@ -153,7 +153,7 @@ const getReservasDisponibles = async (req, res) => {
       .skip(desde)
       .limit(limite)
       .populate("usuario", "username")
-      .populate("cancha","nombre"),
+      .populate("cancha", "nombre"),
   ]);
 
   res.status(200).json({
@@ -162,10 +162,66 @@ const getReservasDisponibles = async (req, res) => {
   });
 };
 
+const getReservasPorUsuario = async (req, res) => {
+  try {
+    const usuarioId = req.user._id;
+
+    const reservas = await Reserva.find({
+      usuario: usuarioId,
+      estado: true,
+    })
+      .populate("cancha", "nombre img precio") 
+      .sort({ fecha: -1 });
+
+    res.json({
+      ok: true,
+      reservas,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({ ok: false, msg: "Error al obtener reservas" });
+  }
+};
+const updatePagoReserva = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { estadoPago, metodoPago } = req.body;
+
+    // Buscamos la reserva y la actualizamos
+    const reservaActualizada = await Reserva.findByIdAndUpdate(
+      id,
+      { estadoPago, metodoPago },
+      { new: true }, // Para que nos devuelva el documento ya modificado
+    )
+      .populate("usuario", "username email")
+      .populate("cancha", "nombre");
+
+    if (!reservaActualizada) {
+      return res.status(404).json({
+        ok: false,
+        message: "Reserva no encontrada",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      message: "Estado de pago actualizado correctamente",
+      reserva: reservaActualizada,
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al actualizar el pago",
+    });
+  }
+};
 export {
-  registerReserva, 
-  checkDisponibilidad, 
-  getReserva, 
+  registerReserva,
+  checkDisponibilidad,
+  getReserva,
   deleteReserva,
-  getReservasDisponibles 
+  getReservasDisponibles,
+  getReservasPorUsuario,
+  updatePagoReserva,
 };
