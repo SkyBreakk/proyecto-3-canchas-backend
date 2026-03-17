@@ -5,7 +5,6 @@ import {
   register,
   verifyEmail,
   loginWithGoogle,
-  getUserByEmail,
   getUsersPaginado,
   deleteUser,
 } from "../controllers/auth.controller.js";
@@ -38,6 +37,5 @@ router.post("/logout", authenticate, (req, res) => {
     .json({ ok: true, message: "Sesión cerrada exitosamente" });
 });
 router.get("/profile", authenticate, getProfile);
-
 
 export default router;
