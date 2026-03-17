@@ -11,8 +11,8 @@ import {
 
 const router = Router();
 
-router.get("/:id", authenticate, obtenerCancha);
-router.get("/", authenticate, obtenerCanchasDisponibles);
+router.get("/:id", obtenerCancha);
+router.get("/", obtenerCanchasDisponibles);
 router.post(
   "/register",
   [authenticate, validarRol, ...canchaValidation()],
