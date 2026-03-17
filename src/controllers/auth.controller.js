@@ -163,21 +163,21 @@ const getProfile = async (req, res) => {
   }
 };
 
- const getUserByEmail = async (req, res) => {
+const getUserByEmail = async (req, res) => {
   try {
     const { email } = req.params;
     const user = await User.findOne({ email });
-    
+
     if (!user) {
       return res.status(404).json({
-        message: "Usuario no registrado"
+        message: "Usuario no registrado",
       });
     }
 
     res.json(user);
   } catch (error) {
     res.status(500).json({
-      message: "Error del servidor"
+      message: "Error del servidor",
     });
   }
 };
@@ -188,9 +188,7 @@ const getUsersPaginado = async (req, res) => {
 
   const [total, users] = await Promise.all([
     User.countDocuments(query),
-    User.find(query)
-      .skip(Number(desde))
-      .limit(Number(limite))
+    User.find(query).skip(Number(desde)).limit(Number(limite)),
   ]);
 
   res.status(200).json({
@@ -202,20 +200,61 @@ const getUsersPaginado = async (req, res) => {
 const deleteUser = async (req, res) => {
   try {
     const { id } = req.params;
-    const usuario = await User.findByIdAndUpdate(id, { state: false }, { new: true });
+    const usuario = await User.findByIdAndUpdate(
+      id,
+      { state: false },
+      { new: true },
+    );
 
     if (!usuario) {
-      return res.status(404).json({ message: 'Usuario no encontrado' });
+      return res.status(404).json({ message: "Usuario no encontrado" });
     }
 
     res.json({
-      message: 'Usuario desactivado correctamente',
-      usuario
+      message: "Usuario desactivado correctamente",
+      usuario,
     });
-
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: 'Error en el borrado de usuario' });
+    res.status(500).json({ message: "Error en el borrado de usuario" });
+  }
+};
+
+const updateProfile = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ ok: false, message: "Usuario no encontrado" });
+    }
+
+    if (username) user.username = username;
+    if (email) user.email = email;
+
+    if (password && password.length > 0) {
+      user.password = password;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      ok: true,
+      message: "Perfil actualizado correctamente",
+      data: {
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
   }
 };
 
@@ -226,5 +265,6 @@ export {
   getProfile,
   getUsersPaginado,
   deleteUser,
-  getUserByEmail
+  getUserByEmail,
+  updateProfile,
 };
