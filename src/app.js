@@ -9,13 +9,13 @@ import productRoutes from "./routes/product.routes.js";
 import cartRoutes from "./routes/cart.routes.js";
 import canchaRoutes from "./routes/cancha.routes.js";
 import reservaRoutes from "./routes/reserva.routes.js";
-import paymentRoutes from "./routes/payment.routes.js"
+import paymentRoutes from "./routes/payment.routes.js";
 
 const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:9500",
+    origin: process.env.CORS_ORIGIN || "http://localhost:9500",
     credentials: true,
     allowedHeaders: ["Content-Type", "Authorization"],
   }),
@@ -32,6 +32,6 @@ app.use("/api/product", productRoutes);
 app.use("/api/cart", cartRoutes);
 app.use("/api/cancha", canchaRoutes);
 app.use("/api/reserva", reservaRoutes);
-app.use("/api/payment", paymentRoutes)
+app.use("/api/payment", paymentRoutes);
 
 export default app;

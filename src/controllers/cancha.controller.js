@@ -23,9 +23,13 @@ const registerCancha = async (req, res) => {
     const cancha = new Cancha(data);
     await cancha.save();
 
-    res.status(201).json(cancha);
+    res.status(201).json({
+      ok: true,
+      cancha,
+    });
   } catch (error) {
     res.status(500).json({
+      ok: false,
       error: error.message,
     });
   }
@@ -72,21 +76,25 @@ const updateCancha = async (req, res) => {
     const { descripcion, precio, img, nombre } = req.body;
     const user = req.user;
 
-    const nombreBD = await Cancha.findOne({ nombre: nombre.toUpperCase(), estado: true, _id: { $ne: id } });
+    const nombreBD = await Cancha.findOne({
+      nombre: nombre.toUpperCase(),
+      estado: true,
+      _id: { $ne: id },
+    });
 
     if (nombreBD) {
       return res.status(400).json({
         ok: false,
-        message: "El nombre coincide con otra cancha"
-      })
-    };
+        message: "El nombre coincide con otra cancha",
+      });
+    }
 
     let data = {
       nombre: nombre ? nombre.toUpperCase() : undefined,
       descripcion,
       precio,
       img,
-      usuario: user._id
+      usuario: user._id,
     };
 
     const cancha = await Cancha.findByIdAndUpdate(id, data, { new: true });
@@ -101,13 +109,13 @@ const updateCancha = async (req, res) => {
     res.status(200).json({
       ok: true,
       message: "Cancha actualizada con exito",
-      cancha
+      cancha,
     });
   } catch (error) {
     console.error(error);
     res.status(500).json({
       ok: false,
-      error: error.message
+      error: error.message,
     });
   }
 };
@@ -135,7 +143,7 @@ const deleteCancha = async (req, res) => {
     console.log(error);
     res.status(500).json({
       ok: false,
-      message: error.message
+      message: error.message,
     });
   }
 };

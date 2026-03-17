@@ -70,9 +70,9 @@ const login = async (req, res) => {
 
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 1000, // 1 hs
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAME_SITE || "lax",
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE) || 3600000,
     };
 
     res.cookie("token", token, cookieOptions);
@@ -186,9 +186,9 @@ const loginWithGoogle = async (req, res) => {
 
     const cookieOptions = {
       httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 1000,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAME_SITE || "lax",
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE) || 3600000,
     };
 
     res.cookie("token", token, cookieOptions);
