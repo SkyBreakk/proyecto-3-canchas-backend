@@ -162,21 +162,45 @@ const getProfile = async (req, res) => {
   }
 };
 
-const getUserByEmail = async (req, res) => {
+const loginWithGoogle = async (req, res) => {
   try {
-    const { email } = req.params;
+    const { email } = req.body;
+
     const user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
+        ok: false,
         message: "Usuario no registrado",
       });
     }
 
-    res.json(user);
+    if (!user.emailVerified) {
+      return res.status(403).json({
+        ok: false,
+        message: "El email no está verificado",
+      });
+    }
+
+    const token = generateToken(user._id);
+
+    const cookieOptions = {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+    };
+
+    res.cookie("token", token, cookieOptions);
+
+    return res.status(200).json({
+      ok: true,
+      message: "Login con Google exitoso",
+    });
   } catch (error) {
-    res.status(500).json({
-      message: "Error del servidor",
+    return res.status(500).json({
+      ok: false,
+      error: error.message,
     });
   }
 };
@@ -219,6 +243,44 @@ const deleteUser = async (req, res) => {
   }
 };
 
+const updateProfile = async (req, res) => {
+  try {
+    const { username, email, password } = req.body;
+    const userId = req.user._id;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res
+        .status(404)
+        .json({ ok: false, message: "Usuario no encontrado" });
+    }
+
+    if (username) user.username = username;
+    if (email) user.email = email;
+
+    if (password && password.length > 0) {
+      user.password = password;
+    }
+
+    await user.save();
+
+    return res.status(200).json({
+      ok: true,
+      message: "Perfil actualizado correctamente",
+      data: {
+        username: user.username,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+};
+
 export {
   register,
   login,
@@ -226,5 +288,6 @@ export {
   getProfile,
   getUsersPaginado,
   deleteUser,
-  getUserByEmail,
+  updateProfile,
+  loginWithGoogle,
 };

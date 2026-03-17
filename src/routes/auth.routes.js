@@ -4,9 +4,10 @@ import {
   login,
   register,
   verifyEmail,
-  getUserByEmail,
+  loginWithGoogle,
   getUsersPaginado,
   deleteUser,
+  updateProfile,
 } from "../controllers/auth.controller.js";
 import {
   loginValidation,
@@ -20,7 +21,7 @@ const router = Router();
 router.post("/register", ...registerValidation, register);
 router.post("/login", ...loginValidation, login);
 router.post("/verify-email", ...verifyEmailValidation, verifyEmail);
-router.get("/user/:email", getUserByEmail);
+router.post("/google", loginWithGoogle);
 
 //RUTAS PRIVADAS
 router.get("/", [authenticate, validarRol], getUsersPaginado);
@@ -37,5 +38,6 @@ router.post("/logout", authenticate, (req, res) => {
     .json({ ok: true, message: "Sesión cerrada exitosamente" });
 });
 router.get("/profile", authenticate, getProfile);
+router.put("/update-profile", authenticate, updateProfile);
 
 export default router;
