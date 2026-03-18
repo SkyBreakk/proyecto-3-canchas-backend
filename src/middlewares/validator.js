@@ -32,7 +32,9 @@ const registerValidation = [
     .trim()
     .isEmail()
     .withMessage("Por favor ingrese un correo")
-    .normalizeEmail()
+    .normalizeEmail({
+      gmail_remove_dots: false,
+    })
     .custom(async (email) => {
       const user = await User.findOne({ email });
       if (user) throw new Error("El usuario ya existe");
@@ -52,7 +54,9 @@ const loginValidation = [
     .trim()
     .isEmail()
     .withMessage("Por favor ingrese un correo válido")
-    .normalizeEmail(),
+    .normalizeEmail({
+      gmail_remove_dots: false,
+    }),
   check("password").notEmpty().withMessage("Password is required"),
   handleValidationErrors,
 ];
@@ -169,7 +173,9 @@ const contactoValidation = [
     .trim()
     .isEmail()
     .withMessage("Por favor ingrese un correo válido")
-    .normalizeEmail(),
+    .normalizeEmail({
+      gmail_remove_dots: false,
+    }),
   check("descripcion")
     .trim()
     .isLength({ min: 5, max: 200 })
