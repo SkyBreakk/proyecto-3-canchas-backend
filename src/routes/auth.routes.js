@@ -29,8 +29,9 @@ router.delete("/:id", [authenticate, validarRol], deleteUser);
 router.post("/logout", authenticate, (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true,
-    sameSite: "lax",
+    secure: process.env.COOKIE_SECURE === "true",
+    sameSite: process.env.COOKIE_SAME_SITE || "lax",
+    path: "/",
   });
 
   return res
