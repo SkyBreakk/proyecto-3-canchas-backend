@@ -327,7 +327,7 @@ const delAdmin = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const usuarioBD = await User.findByIdAndUpdate(id, { role: "user" }, { new: true });
+    const usuarioBD = await User.findByIdAndUpdate(id, { role: "user" }, { new: true }).select("-password");
 
     if (!usuarioBD) {
       return res.status(404).json({
@@ -390,7 +390,7 @@ const delSuperAdmin = async (req, res) => {
 
     const { id } = req.params;
 
-    const usuarioBD = await User.findByIdAndUpdate(id, { role: "admin" }, { new: true });
+    const usuarioBD = await User.findByIdAndUpdate(id, { role: "admin" }, { new: true }).select("-password");
 
     if (!usuarioBD) {
       return res.status(404).json({
