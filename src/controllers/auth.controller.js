@@ -1,3 +1,4 @@
+import { Error } from "mongoose";
 import { sendVerificationEmail } from "../config/nodemailer.js";
 import User from "../models/User.js";
 import { generateToken } from "../utils/jwt.js";
@@ -281,6 +282,136 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const addAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: "El email es requerido"
+      });
+    }
+
+    const usuarioBD = await User.findOne({ email }).select("-password");
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: "El usuario no se encuentra en la base de datos"
+      })
+    }
+
+    if (usuarioBD.role === "admin") {
+      return res.status(400).json({
+        ok: false,
+        message: "El usuario ya cuenta con el rol de admin"
+      });
+    }
+
+    usuarioBD.role = "admin";
+    await usuarioBD.save();
+
+    res.status(200).json({
+      ok: true,
+      message: `El usaurio con el email: ${email} pasa a ser Admin`,
+      data: usuarioBD
+    })
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message
+    })
+  }
+};
+
+const delAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const usuarioBD = await User.findByIdAndUpdate(id, { role: "user" }, { new: true });
+
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: `El usaurio con el id:${id} no existe en la base de datos`
+      })
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: `El usaurio ${usuarioBD.email} ya no es Admin`,
+      data: usuarioBD
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: error.message
+    })
+  }
+};
+
+
+const addSuperAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: "E-mail del usaurio es requerido"
+      })
+    }
+
+    const usuarioBD = await User.findOne({ email }).select("-password");
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: `El usuario con el email: ${email} no se encuentra en la base de datos`
+      })
+    }
+
+    usuarioBD.role = "superadmin";
+    await usuarioBD.save();
+    res.status(200).json({
+      ok: true,
+      message: `El usaurio con email: ${email} pasa a ser Superadmin`,
+      data: usuarioBD
+    })
+
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: error.message
+    })
+  }
+};
+
+const delSuperAdmin = async (req, res) => {
+  try {
+
+    const { id } = req.params;
+
+    const usuarioBD = await User.findByIdAndUpdate(id, { role: "admin" }, { new: true });
+
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: `El usaurio (${id}) no existe en la base de datos`
+      })
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: `El usuario con el email: ${usuarioBD.email} ya no es Superadmin`,
+      data: usuarioBD
+    })
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: error.message
+    })
+  }
+}
+
 export {
   register,
   login,
@@ -290,4 +421,8 @@ export {
   deleteUser,
   updateProfile,
   loginWithGoogle,
+  addAdmin,
+  delAdmin,
+  addSuperAdmin,
+  delSuperAdmin
 };

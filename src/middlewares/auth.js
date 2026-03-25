@@ -43,3 +43,14 @@ export const validarRol = (req, res, next) => {
   }
   next();
 };
+
+export const validarRolSuperAdmin = (req, res, next) => {
+  const rol = req.user.role;
+  if (rol !== "superadmin") {
+    return res.status(403).json({
+      ok: false,
+      message: "No tiene permisos para realizar la acción, debes ser Superadmin"
+    })
+  }
+  next();
+};

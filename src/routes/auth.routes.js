@@ -8,13 +8,21 @@ import {
   getUsersPaginado,
   deleteUser,
   updateProfile,
+  addAdmin,
+  delAdmin,
+  addSuperAdmin,
+  delSuperAdmin
 } from "../controllers/auth.controller.js";
 import {
   loginValidation,
   registerValidation,
   verifyEmailValidation,
 } from "../middlewares/validator.js";
-import { authenticate, validarRol } from "../middlewares/auth.js";
+import {
+  authenticate,
+  validarRol,
+  validarRolSuperAdmin
+} from "../middlewares/auth.js";
 const router = Router();
 
 //RUTAS PUBLICAS
@@ -39,5 +47,10 @@ router.post("/logout", authenticate, (req, res) => {
 });
 router.get("/profile", authenticate, getProfile);
 router.put("/update-profile", authenticate, updateProfile);
+
+router.put("/admin", [authenticate, validarRolSuperAdmin], addAdmin);
+router.delete("/admin/:id", [authenticate, validarRolSuperAdmin], delAdmin);
+router.put("/super-admin", [authenticate, validarRolSuperAdmin], addSuperAdmin);
+router.delete("/super-admin/:id", [authenticate, validarRolSuperAdmin], delSuperAdmin);
 
 export default router;
