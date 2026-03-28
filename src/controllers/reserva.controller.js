@@ -22,14 +22,16 @@ const registerReserva = async (req, res) => {
         message: "la cancha no existe",
       });
     }
+
     const reservasBD = await Reserva.find({ estado: true, cancha });
     const reservaSolapada = reservasBD.some((reservaBD) => {
       return reservaBD.controlSolapamiento(fechaLocal, horas);
     });
+
     if (reservaSolapada) {
       return res.status(400).json({
         ok: false,
-        message: "Horario ocupado",
+        message: "Horario ocupado para la duración seleccionada",
       });
     }
 
@@ -37,7 +39,7 @@ const registerReserva = async (req, res) => {
       usuario: req.user._id,
       cancha,
       senia,
-      fecha: fechaLocal.toString(),
+      fecha: fechaLocal.toISOString(),
       horas,
     };
 
@@ -50,57 +52,6 @@ const registerReserva = async (req, res) => {
     });
   } catch (error) {
     res.status(400).json({
-      error: error.message,
-    });
-  }
-};
-
-const checkDisponibilidad = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const { fecha, horas } = req.body;
-
-    if (!id || !fecha || !horas) {
-      return res.status(400).json({
-        ok: false,
-        message: "Faltan datos necesarios (cancha, fecha o horas)",
-      });
-    }
-
-    let fechaLimpia = new Date(fecha.replace("Z", ""));
-    const fechaConsulta = new Date(
-      fechaLimpia.getFullYear(),
-      fechaLimpia.getMonth(),
-      fechaLimpia.getDate(),
-      fechaLimpia.getHours(),
-      fechaLimpia.getMinutes(),
-    );
-
-    const reservasBD = await Reserva.find({ estado: true, cancha: id });
-
-    const reservaTemporal = new Reserva();
-
-    const ocupado = reservasBD.some((reservaBD) => {
-      return reservaBD.controlSolapamiento(fechaConsulta, horas);
-    });
-
-    if (ocupado) {
-      return res.status(200).json({
-        ok: false,
-        disponible: false,
-        message: "El horario seleccionado ya está ocupado",
-      });
-    }
-
-    return res.status(200).json({
-      ok: true,
-      disponible: true,
-      message: "El horario está disponible",
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      message: "Error al verificar disponibilidad",
       error: error.message,
     });
   }
@@ -210,16 +161,75 @@ const getReservasPorUsuario = async (req, res) => {
     res.status(500).json({ ok: false, msg: "Error al obtener reservas" });
   }
 };
+
+const getHorariosPorFecha = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { fecha } = req.body;
+
+    if (!id || !fecha) {
+      return res.status(400).json({
+        ok: false,
+        message: "Faltan datos necesarios (cancha o fecha)",
+      });
+    }
+
+    const horariosBase = [];
+    for (let hora = 13; hora <= 23; hora++) {
+      horariosBase.push(`${hora.toString().padStart(2, "0")}:00`);
+    }
+
+    const reservasBD = await Reserva.find({ estado: true, cancha: id });
+    const horariosDisponibles = [];
+
+    const ahora = new Date();
+    const fechaSeleccionada = new Date(fecha);
+    const hoy = new Date().toISOString().split("T")[0];
+    const esHoy = fecha === hoy;
+
+    for (const horario of horariosBase) {
+      const nuevoInicio = new Date(`${fecha}T${horario}:00`).getTime();
+      const nuevoFin = nuevoInicio + 1 * 60 * 60 * 1000;
+
+      if (esHoy && nuevoInicio < ahora.getTime()) {
+        continue;
+      }
+
+      const ocupado = reservasBD.some((reservaBD) => {
+        const existenteInicio = new Date(reservaBD.fecha).getTime();
+        const existenteFin = existenteInicio + reservaBD.horas * 60 * 60 * 1000;
+
+        return nuevoInicio < existenteFin && nuevoFin > existenteInicio;
+      });
+
+      if (!ocupado) {
+        horariosDisponibles.push(horario);
+      }
+    }
+
+    return res.status(200).json({
+      ok: true,
+      horarios: horariosDisponibles,
+    });
+  } catch (error) {
+    console.error("Error al obtener horarios:", error);
+    return res.status(500).json({
+      ok: false,
+      message: "Error al obtener horarios",
+      error: error.message,
+    });
+  }
+};
+
 const updatePagoReserva = async (req, res) => {
   try {
     const { id } = req.params;
     const { estadoPago, metodoPago } = req.body;
 
-    // Buscamos la reserva y la actualizamos
     const reservaActualizada = await Reserva.findByIdAndUpdate(
       id,
       { estadoPago, metodoPago },
-      { new: true }, // Para que nos devuelva el documento ya modificado
+      { new: true },
     )
       .populate("usuario", "username email")
       .populate("cancha", "nombre");
@@ -246,10 +256,10 @@ const updatePagoReserva = async (req, res) => {
 };
 export {
   registerReserva,
-  checkDisponibilidad,
   getReserva,
   deleteReserva,
   getReservasDisponibles,
+  getHorariosPorFecha,
   getReservasPorUsuario,
   updatePagoReserva,
 };
