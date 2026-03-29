@@ -17,14 +17,15 @@ app.use(
   cors({
     origin: process.env.CORS_ORIGIN || "http://localhost:9500",
     credentials: true,
-    allowedHeaders: ["Content-Type", "Authorization"],
+    allowedHeaders: ["Content-Type", "Authorization", "Cookie"],
+    exposedHeaders: ["Set-Cookie"],
   }),
 );
+app.use(cookieParser());
 app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan("dev"));
-app.use(cookieParser());
 
 app.use("/api/auth", authRoutes);
 app.use("/api/category", categoryRoutes);

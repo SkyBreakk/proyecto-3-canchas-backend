@@ -15,6 +15,10 @@ const traerCategorias = async (req = request, res) => {
 };
 
 const crearCategoria = async (req, res = response) => {
+  console.log("=== CREATE CATEGORY DEBUG ===");
+  console.log("req.user:", req.user);
+  console.log("req.body:", req.body);
+  console.log("req.cookies:", req.cookies);
   const nombre = req.body.nombre.toUpperCase();
   const validarNombre = await Categoria.findOne({ nombre });
 
@@ -47,7 +51,18 @@ const actualizarCategoria = async (req, res) => {
     { new: true },
   );
 
-  res.status(200).json({ message: "Categoría actualizada", categoria });
+  if (!categoria) {
+    return res.status(404).json({
+      ok: false,
+      message: "Categoría no encontrada",
+    });
+  }
+
+  res.status(200).json({
+    ok: true,
+    message: "Categoría actualizada",
+    categoria,
+  });
 };
 
 const eliminarCategoria = async (req, res) => {
