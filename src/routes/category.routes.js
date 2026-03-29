@@ -8,12 +8,12 @@ import {
 import {
   actualizarCategoria,
   crearCategoria,
-  traerCategorias,
   eliminarCategoria,
+  traerCategoriasPaginado,
 } from "../controllers/category.controller.js";
 const router = Router();
 
-router.get("/", traerCategorias);
+router.get("/", traerCategoriasPaginado);
 router.post(
   "/",
   [
