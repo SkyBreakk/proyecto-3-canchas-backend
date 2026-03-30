@@ -8,13 +8,21 @@ import {
   getUsersPaginado,
   deleteUser,
   updateProfile,
+  addAdmin,
+  delAdmin,
+  addSuperAdmin,
+  delSuperAdmin
 } from "../controllers/auth.controller.js";
 import {
   loginValidation,
   registerValidation,
   verifyEmailValidation,
 } from "../middlewares/validator.js";
-import { authenticate, validarRol } from "../middlewares/auth.js";
+import {
+  authenticate,
+  validarRol,
+  validarRolSuperAdmin
+} from "../middlewares/auth.js";
 const router = Router();
 
 //RUTAS PUBLICAS
@@ -29,8 +37,9 @@ router.delete("/:id", [authenticate, validarRol], deleteUser);
 router.post("/logout", authenticate, (req, res) => {
   res.clearCookie("token", {
     httpOnly: true,
-    secure: true,
-    sameSite: "lax",
+    secure: process.env.COOKIE_SECURE === "true",
+    sameSite: process.env.COOKIE_SAME_SITE || "lax",
+    path: "/",
   });
 
   return res
@@ -39,5 +48,10 @@ router.post("/logout", authenticate, (req, res) => {
 });
 router.get("/profile", authenticate, getProfile);
 router.put("/update-profile", authenticate, updateProfile);
+
+router.put("/admin", [authenticate, validarRolSuperAdmin], addAdmin);
+router.delete("/admin/:id", [authenticate, validarRolSuperAdmin], delAdmin);
+router.put("/super-admin", [authenticate, validarRolSuperAdmin], addSuperAdmin);
+router.delete("/super-admin/:id", [authenticate, validarRolSuperAdmin], delSuperAdmin);
 
 export default router;

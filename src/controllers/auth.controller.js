@@ -144,7 +144,7 @@ const verifyEmail = async (req, res) => {
 const getProfile = async (req, res) => {
   try {
     res.json({
-      success: true,
+      ok: true,
       data: {
         id: req.user._id,
         username: req.user.username,
@@ -238,16 +238,23 @@ const deleteUser = async (req, res) => {
     );
 
     if (!usuario) {
-      return res.status(404).json({ message: "Usuario no encontrado" });
+      return res.status(404).json({
+        ok: false,
+        message: "Usuario no encontrado",
+      });
     }
 
     res.json({
+      ok: true,
       message: "Usuario desactivado correctamente",
       usuario,
     });
   } catch (error) {
     console.log(error);
-    res.status(500).json({ message: "Error en el borrado de usuario" });
+    res.status(500).json({
+      ok: false,
+      message: "Error en el borrado de usuario",
+    });
   }
 };
 
@@ -289,6 +296,141 @@ const updateProfile = async (req, res) => {
   }
 };
 
+const addAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: "El email es requerido",
+      });
+    }
+
+    const usuarioBD = await User.findOne({ email }).select("-password");
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: "El usuario no se encuentra en la base de datos",
+      });
+    }
+
+    if (usuarioBD.role === "admin") {
+      return res.status(400).json({
+        ok: false,
+        message: "El usuario ya cuenta con el rol de admin",
+      });
+    }
+
+    usuarioBD.role = "admin";
+    await usuarioBD.save();
+
+    res.status(200).json({
+      ok: true,
+      message: `El usuario con el email: ${email} pasa a ser Admin`,
+      data: usuarioBD,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+};
+
+const delAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const usuarioBD = await User.findByIdAndUpdate(
+      id,
+      { role: "user" },
+      { new: true },
+    ).select("-password");
+
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: `El usuario con el id: ${id} no existe en la base de datos`,
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: `El usuario ${usuarioBD.email} ya no es Admin`,
+      data: usuarioBD,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+};
+
+const addSuperAdmin = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: "El email del usuario es requerido",
+      });
+    }
+
+    const usuarioBD = await User.findOne({ email }).select("-password");
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: `El usuario con el email: ${email} no se encuentra en la base de datos`,
+      });
+    }
+
+    usuarioBD.role = "superadmin";
+    await usuarioBD.save();
+
+    res.status(200).json({
+      ok: true,
+      message: `El usuario con email: ${email} pasa a ser Superadmin`,
+      data: usuarioBD,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+};
+
+const delSuperAdmin = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const usuarioBD = await User.findByIdAndUpdate(
+      id,
+      { role: "admin" },
+      { new: true },
+    ).select("-password");
+
+    if (!usuarioBD) {
+      return res.status(404).json({
+        ok: false,
+        message: `El usuario (${id}) no existe en la base de datos`,
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: `El usuario con el email: ${usuarioBD.email} ya no es Superadmin`,
+      data: usuarioBD,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+};
+
 export {
   register,
   login,
@@ -298,4 +440,8 @@ export {
   deleteUser,
   updateProfile,
   loginWithGoogle,
+  addAdmin,
+  delAdmin,
+  addSuperAdmin,
+  delSuperAdmin,
 };

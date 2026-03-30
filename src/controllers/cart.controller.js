@@ -31,6 +31,7 @@ export const addToCart = async (req, res) => {
     const producto = req.productoEncontrado;
 
     let cart = await Cart.findOne({ usuario: req.user.id });
+
     if (!cart) {
       cart = new Cart({ usuario: req.user.id, items: [] });
     }
@@ -39,22 +40,18 @@ export const addToCart = async (req, res) => {
       (item) => item.producto.toString() === productoId,
     );
 
-    if (itemExistente) {
-      itemExistente.cantidad += cantidad;
-      itemExistente.precioUnitario = producto.precio;
-    } else {
+    if (!itemExistente) {
       cart.items.push({
         producto: productoId,
         cantidad,
         precioUnitario: producto.precio,
       });
+
+      cart.calcularTotal();
+      await cart.save();
     }
 
-    cart.calcularTotal();
-    await cart.save();
-
     const cartPopulated = await cart.populate("items.producto");
-
     res.json(cartPopulated);
   } catch (error) {
     res.status(500).json({ error: error.message });

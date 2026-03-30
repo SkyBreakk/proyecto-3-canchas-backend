@@ -14,40 +14,63 @@ const traerCategorias = async (req = request, res) => {
   });
 };
 
-const crearCategoria = async (req, res = response) => {
-  const nombre = req.body.nombre.toUpperCase();
-  const validarNombre = await Categoria.findOne({ nombre });
+const crearCategoria = async (req, res) => {
+  try {
+    if (!req.body.nombre) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "El nombre es requerido" });
+    }
 
-  if (validarNombre) {
-    return res.status(400).json({ msg: `La categoría ${nombre} ya existe` });
+    const nombre = req.body.nombre.toUpperCase();
+    const validarNombre = await Categoria.findOne({ nombre });
+
+    if (validarNombre) {
+      return res
+        .status(400)
+        .json({ ok: false, message: `La categoría ${nombre} ya existe` });
+    }
+
+    const usuario = req.user._id;
+    const categoria = new Categoria({ nombre, usuario });
+    await categoria.save();
+
+    res.status(201).json({ ok: true, msg: "Categoría guardada", categoria });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Error interno del servidor" });
   }
-
-  const usuario = req.user._id;
-  const categoria = new Categoria({ nombre, usuario });
-
-  await categoria.save();
-
-  res.status(201).json({ msg: "Categoría guardada", categoria });
 };
 
 const actualizarCategoria = async (req, res) => {
-  const { id } = req.params;
-  const nombre = req.body.nombre.toUpperCase();
+  try {
+    const { id } = req.params;
+    if (!req.body.nombre)
+      return res.status(400).json({ ok: false, message: "Nombre requerido" });
 
-  const nombreExiste = await Categoria.findOne({ nombre, _id: { $ne: id } });
-  if (nombreExiste) {
-    return res
-      .status(400)
-      .json({ ok: false, message: "Ese nombre ya está en uso" });
+    const nombre = req.body.nombre.toUpperCase();
+
+    const nombreExiste = await Categoria.findOne({ nombre, _id: { $ne: id } });
+    if (nombreExiste) {
+      return res
+        .status(400)
+        .json({ ok: false, message: "Ese nombre ya está en uso" });
+    }
+
+    const categoria = await Categoria.findByIdAndUpdate(
+      id,
+      { nombre, usuario: req.user._id },
+      { new: true },
+    );
+
+    if (!categoria)
+      return res.status(404).json({ ok: false, message: "No encontrada" });
+
+    res
+      .status(200)
+      .json({ ok: true, message: "Categoría actualizada", categoria });
+  } catch (error) {
+    res.status(500).json({ ok: false, message: "Error al actualizar" });
   }
-
-  const categoria = await Categoria.findByIdAndUpdate(
-    id,
-    { nombre, usuario: req.user._id },
-    { new: true },
-  );
-
-  res.status(200).json({ message: "Categoría actualizada", categoria });
 };
 
 const eliminarCategoria = async (req, res) => {

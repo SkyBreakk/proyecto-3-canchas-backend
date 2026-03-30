@@ -34,11 +34,30 @@ export const authenticate = async (req, res, next) => {
 };
 
 export const validarRol = (req, res, next) => {
+  if (!req.user || !req.user.role) {
+    return res.status(401).json({
+      ok: false,
+      message: "Usuario no autenticado",
+    });
+  }
+
   const rol = req.user.role;
-  if (rol !== "admin") {
+  if (rol !== "admin" && rol !== "superadmin") {
     return res.status(401).json({
       ok: false,
       message: "No tiene permisos para realizar la acción",
+    });
+  }
+  next();
+};
+
+export const validarRolSuperAdmin = (req, res, next) => {
+  const rol = req.user.role;
+  if (rol !== "superadmin") {
+    return res.status(403).json({
+      ok: false,
+      message:
+        "No tiene permisos para realizar la acción, debes ser Superadmin",
     });
   }
   next();
