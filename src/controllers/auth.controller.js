@@ -247,9 +247,9 @@ const loginWithGoogle = async (req, res) => {
 
     res.cookie("token", jwt, {
       httpOnly: true,
-      secure: true,
-      sameSite: "lax",
-      maxAge: 60 * 60 * 1000,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: process.env.COOKIE_SAME_SITE || "lax",
+      maxAge: parseInt(process.env.COOKIE_MAX_AGE) || 3600000,
     });
 
     return res.status(200).json({
