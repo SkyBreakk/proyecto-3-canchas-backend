@@ -10,8 +10,7 @@ import {
   updateProfile,
   addAdmin,
   delAdmin,
-  addSuperAdmin,
-  delSuperAdmin
+  resendVerificationCode,
 } from "../controllers/auth.controller.js";
 import {
   loginValidation,
@@ -21,7 +20,7 @@ import {
 import {
   authenticate,
   validarRol,
-  validarRolSuperAdmin
+  validarRolSuperAdmin,
 } from "../middlewares/auth.js";
 const router = Router();
 
@@ -29,6 +28,7 @@ const router = Router();
 router.post("/register", ...registerValidation, register);
 router.post("/login", ...loginValidation, login);
 router.post("/verify-email", ...verifyEmailValidation, verifyEmail);
+router.post("/resend-code", resendVerificationCode);
 router.post("/google", loginWithGoogle);
 
 //RUTAS PRIVADAS
@@ -51,7 +51,5 @@ router.put("/update-profile", authenticate, updateProfile);
 
 router.put("/admin", [authenticate, validarRolSuperAdmin], addAdmin);
 router.delete("/admin/:id", [authenticate, validarRolSuperAdmin], delAdmin);
-router.put("/super-admin", [authenticate, validarRolSuperAdmin], addSuperAdmin);
-router.delete("/super-admin/:id", [authenticate, validarRolSuperAdmin], delSuperAdmin);
 
 export default router;
