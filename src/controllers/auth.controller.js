@@ -1,6 +1,7 @@
 import { sendVerificationEmail } from "../config/nodemailer.js";
 import User from "../models/User.js";
 import { generateToken } from "../utils/jwt.js";
+import admin from "../config/firebase.js";
 
 const register = async (req, res) => {
   try {
@@ -140,6 +141,58 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const resendVerificationCode = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        ok: false,
+        message: "El email es requerido",
+      });
+    }
+
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(404).json({
+        ok: false,
+        message: "Usuario no encontrado",
+      });
+    }
+
+    if (user.emailVerified) {
+      return res.status(400).json({
+        ok: false,
+        message: "El usuario ya está verificado",
+      });
+    }
+
+    const verificationCode = user.generateVerificationCode();
+    await user.save();
+
+    try {
+      await sendVerificationEmail(email, user.username, verificationCode);
+    } catch (error) {
+      console.error("Error al reenviar el email", error);
+      return res.status(500).json({
+        ok: false,
+        message: "Error al enviar el código de verificación",
+      });
+    }
+
+    return res.status(200).json({
+      ok: true,
+      message: "Código de verificación reenviado correctamente",
+    });
+  } catch (error) {
+    console.error("Error en resendVerificationCode:", error);
+    return res.status(500).json({
+      ok: false,
+      error: error.message,
+    });
+  }
+};
+
 const getProfile = async (req, res) => {
   try {
     res.json({
@@ -164,9 +217,24 @@ const getProfile = async (req, res) => {
 
 const loginWithGoogle = async (req, res) => {
   try {
-    const { email } = req.body;
+    const { token } = req.body;
 
-    const user = await User.findOne({ email });
+    let decodedToken;
+
+    try {
+      decodedToken = await admin.auth().verifyIdToken(token);
+      console.log("DECODED TOKEN:", decodedToken);
+    } catch (error) {
+      console.error("ERROR VERIFY TOKEN:", error);
+      return res.status(401).json({
+        ok: false,
+        message: error.message,
+      });
+    }
+
+    const email = decodedToken.email;
+
+    let user = await User.findOne({ email });
 
     if (!user) {
       return res.status(404).json({
@@ -175,32 +243,24 @@ const loginWithGoogle = async (req, res) => {
       });
     }
 
-    if (!user.emailVerified) {
-      return res.status(403).json({
-        ok: false,
-        message: "El email no está verificado",
-      });
-    }
+    const jwt = generateToken(user._id);
 
-    const token = generateToken(user._id);
-
-    const cookieOptions = {
+    res.cookie("token", jwt, {
       httpOnly: true,
-      secure: process.env.COOKIE_SECURE === "true",
-      sameSite: process.env.COOKIE_SAME_SITE || "lax",
-      maxAge: parseInt(process.env.COOKIE_MAX_AGE) || 3600000,
-    };
-
-    res.cookie("token", token, cookieOptions);
+      secure: true,
+      sameSite: "lax",
+      maxAge: 60 * 60 * 1000,
+    });
 
     return res.status(200).json({
       ok: true,
       message: "Login con Google exitoso",
     });
   } catch (error) {
+    console.error(error);
     return res.status(500).json({
       ok: false,
-      error: error.message,
+      message: "Error en el servidor",
     });
   }
 };
@@ -359,74 +419,11 @@ const delAdmin = async (req, res) => {
   }
 };
 
-const addSuperAdmin = async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) {
-      return res.status(400).json({
-        ok: false,
-        message: "El email del usuario es requerido",
-      });
-    }
-
-    const usuarioBD = await User.findOne({ email }).select("-password");
-    if (!usuarioBD) {
-      return res.status(404).json({
-        ok: false,
-        message: `El usuario con el email: ${email} no se encuentra en la base de datos`,
-      });
-    }
-
-    usuarioBD.role = "superadmin";
-    await usuarioBD.save();
-
-    res.status(200).json({
-      ok: true,
-      message: `El usuario con email: ${email} pasa a ser Superadmin`,
-      data: usuarioBD,
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
-  }
-};
-
-const delSuperAdmin = async (req, res) => {
-  try {
-    const { id } = req.params;
-
-    const usuarioBD = await User.findByIdAndUpdate(
-      id,
-      { role: "admin" },
-      { new: true },
-    ).select("-password");
-
-    if (!usuarioBD) {
-      return res.status(404).json({
-        ok: false,
-        message: `El usuario (${id}) no existe en la base de datos`,
-      });
-    }
-
-    res.status(200).json({
-      ok: true,
-      message: `El usuario con el email: ${usuarioBD.email} ya no es Superadmin`,
-      data: usuarioBD,
-    });
-  } catch (error) {
-    res.status(500).json({
-      ok: false,
-      message: error.message,
-    });
-  }
-};
-
 export {
   register,
   login,
   verifyEmail,
+  resendVerificationCode,
   getProfile,
   getUsersPaginado,
   deleteUser,
@@ -434,6 +431,4 @@ export {
   loginWithGoogle,
   addAdmin,
   delAdmin,
-  addSuperAdmin,
-  delSuperAdmin,
 };
