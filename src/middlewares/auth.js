@@ -42,7 +42,7 @@ export const validarRol = (req, res, next) => {
   }
 
   const rol = req.user.role;
-  if (rol !== "admin") {
+  if (rol !== "admin" && rol !== "superadmin") {
     return res.status(401).json({
       ok: false,
       message: "No tiene permisos para realizar la acción",
