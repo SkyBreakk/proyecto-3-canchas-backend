@@ -22,12 +22,12 @@ const UserSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["user", "premium", "admin", "superadmin"],
+      enum: ["user", "admin", "superadmin"],
       default: "user",
     },
     state: {
       type: Boolean,
-      default: true
+      default: true,
     },
     emailVerified: {
       type: Boolean,
