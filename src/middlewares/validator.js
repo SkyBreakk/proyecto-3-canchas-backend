@@ -18,8 +18,8 @@ const handleValidationErrors = (req, res, next) => {
 const registerValidation = [
   check("username")
     .trim()
-    .isLength({ min: 3, max: 30 })
-    .withMessage("El nombre de usuario debe tener entre 3 y 30 carácteres")
+    .isLength({ min: 5, max: 20 })
+    .withMessage("El nombre de usuario debe tener entre 5 y 20 carácteres")
     .matches(/^[a-zA-Z0-9_]+$/)
     .withMessage(
       "El nombre de usuario solo debe contener letras, números y barra bajas",
@@ -176,8 +176,12 @@ const reservaValidation = () => [
 const contactoValidation = [
   check("nombre")
     .trim()
-    .isLength({ min: 5, max: 200 })
-    .withMessage("El nombre de usuario debe tener entre 5 y 30 carácteres"),
+    .isLength({ min: 5, max: 20 })
+    .withMessage("El nombre de usuario debe tener entre 5 y 20 carácteres")
+    .matches(/^[a-zA-Z0-9_]+$/)
+    .withMessage(
+      "El nombre de usuario solo debe contener letras, números y barra bajas",
+    ),
   check("contacto")
     .trim()
     .isEmail()
@@ -187,8 +191,8 @@ const contactoValidation = [
     }),
   check("descripcion")
     .trim()
-    .isLength({ min: 5, max: 200 })
-    .withMessage("El mensaje debe tener entre 5 y 30 carácteres"),
+    .isLength({ min: 20 })
+    .withMessage("El mensaje debe tener como mínimo 20"),
   handleValidationErrors,
 ];
 
