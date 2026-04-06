@@ -52,9 +52,16 @@ const login = async (req, res) => {
       });
     }
 
+    if (!user.state) {
+      return res.status(403).json({
+        ok: false,
+        message: "Tu cuenta está desactivada. Contacta a soporte.",
+      });
+    }
+
     const isPasswordValid = user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(403).json({
+      return res.status(401).json({
         ok: false,
         message: "Credenciales incorrectas",
       });
@@ -99,6 +106,13 @@ const verifyEmail = async (req, res) => {
       return res.status(404).json({
         ok: false,
         message: "Usuario no encontrado",
+      });
+    }
+
+    if (!user.state) {
+      return res.status(403).json({
+        ok: false,
+        message: "Esta cuenta está desactivada",
       });
     }
 
@@ -157,6 +171,13 @@ const resendVerificationCode = async (req, res) => {
       return res.status(404).json({
         ok: false,
         message: "Usuario no encontrado",
+      });
+    }
+
+    if (!user.state) {
+      return res.status(403).json({
+        ok: false,
+        message: "Esta cuenta está desactivada",
       });
     }
 
@@ -240,6 +261,13 @@ const loginWithGoogle = async (req, res) => {
       return res.status(404).json({
         ok: false,
         message: "Usuario no registrado",
+      });
+    }
+
+    if (!user.state) {
+      return res.status(403).json({
+        ok: false,
+        message: "Tu cuenta está desactivada. Contacta a soporte.",
       });
     }
 

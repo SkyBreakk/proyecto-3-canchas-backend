@@ -37,7 +37,16 @@ const registerValidation = [
     })
     .custom(async (email) => {
       const user = await User.findOne({ email });
-      if (user) throw new Error("El usuario ya existe");
+
+      if (user) {
+        if (!user.state) {
+          throw new Error(
+            "Esta cuenta está desactivada. Contacta a soporte para reactivarla.",
+          );
+        } else {
+          throw new Error("El usuario ya existe");
+        }
+      }
     }),
   check("password")
     .isLength({ min: 6 })
