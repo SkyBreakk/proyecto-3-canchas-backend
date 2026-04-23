@@ -12,13 +12,12 @@ export const createTransporter = () => {
   });
 };
 
-export const sendVerificationEmail = async (
+export const enviarCorreoDeVerificacion = async (
   email,
   username,
   verificationCode,
 ) => {
   const transporter = createTransporter();
-
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to: email,
@@ -31,17 +30,17 @@ export const sendVerificationEmail = async (
       <p>Si no creaste una cuenta en nuestra app, ignora este email.</p>
         `,
   };
-
   try {
     await transporter.sendMail(mailOptions);
   } catch (error) {
-    console.error("Error al enviar el email:", error);
+    throw new Error(
+      "No se llegó a enviar el correo de verificación. Intentelo nuevamente más tarde",
+    );
   }
 };
 
-export const sendContactEmail = async (nombre, contacto, descripcion) => {
+export const enviarCorreoDeContacto = async (nombre, contacto, descripcion) => {
   const transporter = createTransporter();
-
   const mailOptions = {
     from: process.env.EMAIL_FROM,
     to: process.env.EMAIL_USER,
@@ -60,5 +59,11 @@ export const sendContactEmail = async (nombre, contacto, descripcion) => {
     `,
   };
 
-  return transporter.sendMail(mailOptions);
+  try {
+    await transporter.sendMail(mailOptions);
+  } catch (error) {
+    throw new Error(
+      "No se llegó a enviar el correo de verificación. Intentelo nuevamente más tarde",
+    );
+  }
 };

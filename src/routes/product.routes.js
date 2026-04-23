@@ -1,10 +1,10 @@
 import { Router } from "express";
 import { check } from "express-validator";
 import {
-  actualizarProductoValidator,
-  crearProductoValidator,
+  validarActualizarProducto,
+  validarCreacionDeProducto,
   existeCategoriaPorId,
-  handleValidationErrors,
+  ManejarErroresDeValidacion,
 } from "../middlewares/validator.js";
 import { authenticate, validarRol } from "../middlewares/auth.js";
 const router = Router();
@@ -13,7 +13,7 @@ import {
   obtenerProductos,
   crearProducto,
   actualizarProducto,
-  borrarProducto,
+  removerProducto,
   obtenerProducto,
 } from "../controllers/product.controller.js";
 
@@ -24,9 +24,9 @@ router.post(
   [
     authenticate,
     validarRol,
-    ...crearProductoValidator,
+    ...validarCreacionDeProducto,
     check("categoria").custom(existeCategoriaPorId),
-    handleValidationErrors,
+    ManejarErroresDeValidacion,
   ],
   crearProducto,
 );
@@ -36,9 +36,9 @@ router.put(
   [
     authenticate,
     validarRol,
-    ...actualizarProductoValidator,
+    ...validarActualizarProducto,
     check("categoria").custom(existeCategoriaPorId),
-    handleValidationErrors,
+    ManejarErroresDeValidacion,
   ],
   actualizarProducto,
 );
@@ -49,9 +49,9 @@ router.delete(
     authenticate,
     validarRol,
     check("id").isMongoId().withMessage("No es un id de mongo válido"),
-    handleValidationErrors,
+    ManejarErroresDeValidacion,
   ],
-  borrarProducto,
+  removerProducto,
 );
 
 export default router;

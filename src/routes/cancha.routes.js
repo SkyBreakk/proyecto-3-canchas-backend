@@ -1,24 +1,26 @@
 import { Router } from "express";
 import { authenticate, validarRol } from "../middlewares/auth.js";
-import { canchaValidation } from "../middlewares/validator.js";
+import { validarCancha } from "../middlewares/validator.js";
 import {
-  registerCancha,
-  obtenerCancha,
+  registrarCancha,
   obtenerCanchasDisponibles,
-  updateCancha,
-  deleteCancha,
+  actualizarCancha,
+  removerCancha,
 } from "../controllers/cancha.controller.js";
 
 const router = Router();
 
-router.get("/:id", obtenerCancha);
 router.get("/", obtenerCanchasDisponibles);
 router.post(
   "/register",
-  [authenticate, validarRol, ...canchaValidation()],
-  registerCancha,
+  [authenticate, validarRol, ...validarCancha()],
+  registrarCancha,
 );
-router.put("/update/:id", [authenticate, validarRol], updateCancha);
-router.delete("/:id", [authenticate, validarRol], deleteCancha);
+router.put(
+  "/update/:id",
+  [authenticate, validarRol, ...validarCancha()],
+  actualizarCancha,
+);
+router.delete("/:id", [authenticate, validarRol], removerCancha);
 
 export default router;

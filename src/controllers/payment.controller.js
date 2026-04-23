@@ -1,43 +1,99 @@
 import { MercadoPagoConfig, Preference } from "mercadopago";
+import Producto from "../models/Product.js";
+import Cart from "../models/Cart.js";
+import Reserva from "../models/Reserva.js";
+import Cancha from "../models/Cancha.js";
 
-const createPayment = async (req, res) => {
+const crearPago = async (req, res) => {
   try {
-    const { titulo, cantidad, precio, reservaId } = req.body;
-    const client = new MercadoPagoConfig({
+    const { tipo, cantidad, id } = req.body;
+    let title,
+      unit_price,
+      quantity = 1;
+    let external_reference = id;
+
+    if (!tipo)
+      return res
+        .status(400)
+        .json({ ok: false, message: "Tipo de pago requerido" });
+
+    if (tipo === "directa") {
+      const producto = await Producto.findById(id);
+      if (!producto)
+        return res
+          .status(404)
+          .json({ ok: false, message: "Producto no encontrado" });
+      if (!producto.estado) {
+        res.status(404).json({ ok: false, message: "Producto no disponible" });
+      }
+      if (producto.stock < cantidad) {
+        res
+          .status(400)
+          .json({ ok: false, message: "Cantidad supera el stock disponible" });
+      }
+
+      title = producto.nombre || "Producto - Zona5";
+      unit_price = Number(producto.precio);
+      quantity = Number(cantidad) || 1;
+    } else if (tipo === "carrito") {
+      const carrito = await Cart.findOne({ usuario: req.user._id }).populate(
+        "items.producto",
+      );
+      if (!carrito || carrito.items.length === 0) {
+        return res
+          .status(404)
+          .json({ ok: false, message: "Carrito vacío o no encontrado" });
+      }
+      const costoEnvio = 20000;
+      title = "Compra E-shop - Zona5";
+      unit_price = Number(carrito.total) + costoEnvio;
+    } else if (tipo === "reserva") {
+      const reserva = await Reserva.findById(id).populate("cancha");
+      if (!reserva)
+        return res
+          .status(404)
+          .json({ ok: false, message: "Reserva no encontrada" });
+      if (reserva.usuario.toString() !== req.user._id.toString()) {
+        return res.status(403).json({ ok: false, message: "No autorizado" });
+      }
+      if (reserva.estadoPago === "Pagado") {
+        return res
+          .status(400)
+          .json({ ok: false, message: "Esta reserva ya fue abonada" });
+      }
+
+      title = `Reserva: ${reserva.cancha.nombre}`;
+      unit_price = Number(reserva.cancha.precio) * reserva.horas;
+    }
+
+    const cliente = new MercadoPagoConfig({
       accessToken: process.env.MP_ACCESS_TOKEN,
     });
+    const preferencia = new Preference(cliente);
 
-    const preference = new Preference(client);
-
-    const referenciaPago = await preference.create({
+    const preferenceData = {
       body: {
-        items: [
-          {
-            title: titulo,
-            quantity: cantidad,
-            unit_price: Number(precio),
-          },
-        ],
+        items: [{ title, quantity, unit_price, currency_id: "ARS" }],
         back_urls: {
-          success: process.env.CORS_ORIGIN + "/success",
-          failure: process.env.CORS_ORIGIN + "/failure",
-          pending: process.env.CORS_ORIGIN + "/pending",
+          success: `${process.env.CORS_ORIGIN}/success`,
+          failure: `${process.env.CORS_ORIGIN}/failure`,
+          pending: `${process.env.CORS_ORIGIN}/pending`,
         },
-        // auto_return: "approved",
-        external_reference: reservaId,
+        external_reference: external_reference,
       },
-    });
+    };
 
+    const response = await preferencia.create(preferenceData);
     res.status(200).json({
       ok: true,
-      id: referenciaPago.id,
+      message: "Link de pago generada correctamente",
+      id: response.id,
     });
   } catch (error) {
-    console.log("ERROR DETALLADO MP:", error.response?.data || error.message);
-    res.status(500).json({
-      error: error.message,
-    });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error interno", error: error.message });
   }
 };
 
-export { createPayment };
+export { crearPago };

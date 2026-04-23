@@ -1,27 +1,28 @@
 import { Router } from "express";
 import { authenticate, validarRol } from "../middlewares/auth.js";
 import {
-  contactoValidation,
-  reservaValidation,
+  validarContacto,
+  validarRemoverReserva,
+  validarReserva,
 } from "../middlewares/validator.js";
 import {
-  registerReserva,
-  deleteReserva,
-  getReservasDisponibles,
+  registrarReserva,
+  removerReserva,
+  obtenerReservasActivas,
   contactoReserva,
-  getReservasPorUsuario,
-  updatePagoReserva,
-  getHorariosPorFecha,
+  obtenerReservasPorUsuario,
+  actualizarPagoDeReserva,
+  obtenerHorariosPorFecha,
 } from "../controllers/reserva.controller.js";
 
 const router = Router();
 
-router.get("/all", [authenticate, validarRol], getReservasDisponibles);
-router.get("/mis-reservas", authenticate, getReservasPorUsuario);
-router.post("/horarios/:id", getHorariosPorFecha);
-router.post("/register", authenticate, reservaValidation(), registerReserva);
-router.put("/:id/pago", [authenticate, validarRol], updatePagoReserva);
-router.delete("/:id", authenticate, deleteReserva);
+router.get("/all", [authenticate, validarRol], obtenerReservasActivas);
+router.get("/mis-reservas", authenticate, obtenerReservasPorUsuario);
+router.post("/horarios/:id", obtenerHorariosPorFecha);
+router.post("/register", authenticate, validarReserva(), registrarReserva);
+router.put("/:id/pago", [authenticate, validarRol], actualizarPagoDeReserva);
+router.delete("/:id", [authenticate, ...validarRemoverReserva], removerReserva);
 
-router.post("/contacto", ...contactoValidation, contactoReserva);
+router.post("/contacto", ...validarContacto, contactoReserva);
 export default router;

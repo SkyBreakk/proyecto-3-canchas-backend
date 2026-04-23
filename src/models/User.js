@@ -54,12 +54,12 @@ UserSchema.pre("save", async function () {
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-UserSchema.methods.generateVerificationCode = function () {
-  const code = Math.floor(100000 + Math.random() * 900000).toString();
+UserSchema.methods.generarCodigoDeVerificacion = function () {
+  const codigo = Math.floor(100000 + Math.random() * 900000).toString();
 
-  this.verificationCode = code;
+  this.verificationCode = codigo;
   this.verificationCodeExpires = Date.now() + 15 * 60 * 1000;
-  return code;
+  return codigo;
 };
 
 UserSchema.methods.comparePassword = function (userPassword) {

@@ -1,11 +1,10 @@
-import { sendContactEmail } from "../config/nodemailer.js";
+import { enviarCorreoDeContacto } from "../config/nodemailer.js";
 import Cancha from "../models/Cancha.js";
 import Reserva from "../models/Reserva.js";
 
-const registerReserva = async (req, res) => {
+const registrarReserva = async (req, res) => {
   try {
     const { senia, horas, cancha, fecha } = req.body;
-
     let fechaLimpia = new Date(fecha.replace("Z", ""));
     const fechaLocal = new Date(
       fechaLimpia.getFullYear(),
@@ -15,19 +14,18 @@ const registerReserva = async (req, res) => {
       fechaLimpia.getMinutes(),
     );
 
-    const canchaBD = await Cancha.findById(cancha);
-    if (!canchaBD) {
+    const canchaExistente = await Cancha.findById(cancha);
+    if (!canchaExistente) {
       return res.status(404).json({
         ok: false,
         message: "la cancha no existe",
       });
     }
 
-    const reservasBD = await Reserva.find({ estado: true, cancha });
-    const reservaSolapada = reservasBD.some((reservaBD) => {
-      return reservaBD.controlSolapamiento(fechaLocal, horas);
+    const reservasActivas = await Reserva.find({ estado: true, cancha });
+    const reservaSolapada = reservasActivas.some((reserva) => {
+      return reserva.controlSolapamiento(fechaLocal, horas);
     });
-
     if (reservaSolapada) {
       return res.status(400).json({
         ok: false,
@@ -35,116 +33,117 @@ const registerReserva = async (req, res) => {
       });
     }
 
-    const data = {
+    const datosReserva = {
       usuario: req.user._id,
       cancha,
       senia,
       fecha: fechaLocal.toISOString(),
       horas,
     };
+    const nuevaReserva = new Reserva(datosReserva);
+    await nuevaReserva.save();
 
-    const reserva = new Reserva(data);
-    await reserva.save();
     return res.status(201).json({
       ok: true,
       message: "Reserva creada con exito",
-      data,
+      nuevaReserva,
     });
   } catch (error) {
     res.status(400).json({
+      ok: false,
+      message: error.message,
+    });
+  }
+};
+
+const removerReserva = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const reserva = await Reserva.findByIdAndUpdate(
+      id,
+      { estado: false },
+      { new: true },
+    );
+
+    if (!reserva) {
+      return res.status(404).json({
+        ok: false,
+        message: "No se encontró la reserva para eliminar",
+      });
+    }
+
+    res.status(200).json({
+      ok: true,
+      message: "Reserva eliminada",
+      reserva,
+    });
+  } catch (error) {
+    res.status(500).json({
+      ok: false,
+      message: "Error al eliminar la reserva",
       error: error.message,
     });
   }
 };
 
-const getReserva = async (req, res) => {
+const obtenerReservasActivas = async (req, res) => {
   try {
-    const { id } = req.params;
-    const reservaBD = await Reserva.findById(id)
-      .populate("usuario", "username")
-      .populate("cancha", "nombre");
-    if (!reservaBD) {
-      return res.status(404).json({
-        ok: false,
-        message: "La reserva no existe",
-      });
-    }
-    return res.status(200).json({
+    const { limite = 5, desde = 0 } = req.query;
+    const filtro = { estado: true };
+
+    const [total, reservas] = await Promise.all([
+      Reserva.countDocuments(filtro),
+      Reserva.find(filtro)
+        .skip(desde)
+        .limit(limite)
+        .populate("usuario", "username")
+        .populate("cancha", "nombre"),
+    ]);
+
+    res.status(200).json({
       ok: true,
-      reservaBD,
+      message: "Reservas obtenidas con éxito",
+      total,
+      reservas,
     });
   } catch (error) {
     res.status(500).json({
       ok: false,
-      message: "Error al buscar la reserva",
+      message: "Error al obtener las reservas",
+      error: error.message,
     });
   }
-};
-
-const deleteReserva = async (req, res) => {
-  const { id } = req.params;
-  const reservaBD = await Reserva.findByIdAndUpdate(
-    id,
-    { estado: false },
-    { new: true },
-  );
-  res.status(200).json({
-    ok: true,
-    message: "Reserva eliminada",
-    reservaBD,
-  });
-};
-
-const getReservasDisponibles = async (req, res) => {
-  const { limite = 5, desde = 0 } = req.query;
-  const query = { estado: true };
-
-  const [total, reservas] = await Promise.all([
-    Reserva.countDocuments(query),
-    Reserva.find(query)
-      .skip(desde)
-      .limit(limite)
-      .populate("usuario", "username")
-      .populate("cancha", "nombre"),
-  ]);
-
-  res.status(200).json({
-    total,
-    reservas,
-  });
 };
 
 export const contactoReserva = async (req, res) => {
   const { nombre, contacto, descripcion } = req.body;
-
   if (!nombre || !contacto) {
     return res.status(400).json({
-      status: "error",
-      message: "Nombre y contacto son campos obligatorios.",
+      ok: "false",
+      message: "Nombre y contacto son campos obligatorios",
     });
   }
 
   try {
-    await sendContactEmail(nombre, contacto, descripcion);
+    await enviarCorreoDeContacto(nombre, contacto, descripcion);
     return res.status(200).json({
       ok: true,
       message:
-        "Tu consulta ha sido enviada con éxito. Nos contactaremos pronto.",
+        "Tu consulta ha sido enviada con éxito. Nos contactaremos pronto",
     });
   } catch (error) {
-    console.error("Error al enviar el correo:", error);
     return res.status(500).json({
       ok: false,
       message:
-        "Hubo un problema al enviar el correo. Intenta de nuevo más tarde.",
+        "Hubo un problema al enviar el correo. Intenta de nuevo más tarde",
+      error: error.message,
     });
   }
 };
 
-const getReservasPorUsuario = async (req, res) => {
+const obtenerReservasPorUsuario = async (req, res) => {
   try {
     const usuarioId = req.user._id;
-
     const reservas = await Reserva.find({
       usuario: usuarioId,
       estado: true,
@@ -154,19 +153,22 @@ const getReservasPorUsuario = async (req, res) => {
 
     res.json({
       ok: true,
+      message: "Reservas del usuario obtenidas",
       reservas,
     });
   } catch (error) {
-    console.log(error);
-    res.status(500).json({ ok: false, msg: "Error al obtener reservas" });
+    res.status(500).json({
+      ok: false,
+      message: "Error al obtener reservas",
+      error: error.message,
+    });
   }
 };
 
-const getHorariosPorFecha = async (req, res) => {
+const obtenerHorariosPorFecha = async (req, res) => {
   try {
     const { id } = req.params;
     const { fecha } = req.body;
-
     if (!id || !fecha) {
       return res.status(400).json({
         ok: false,
@@ -179,29 +181,26 @@ const getHorariosPorFecha = async (req, res) => {
       horariosBase.push(`${hora.toString().padStart(2, "0")}:00`);
     }
 
-    const reservasBD = await Reserva.find({ estado: true, cancha: id });
+    const reservasActivas = await Reserva.find({ estado: true, cancha: id });
     const horariosDisponibles = [];
 
     const ahora = new Date();
-    const fechaSeleccionada = new Date(fecha);
-    const hoy = new Date().toISOString().split("T")[0];
-    const esHoy = fecha === hoy;
+    const hoyISO = new Date().toISOString().split("T")[0];
+    const esHoy = fecha === hoyISO;
 
     for (const horario of horariosBase) {
       const nuevoInicio = new Date(`${fecha}T${horario}:00`).getTime();
       const nuevoFin = nuevoInicio + 1 * 60 * 60 * 1000;
 
-      if (esHoy && nuevoInicio < ahora.getTime()) {
+      if (esHoy) {
         continue;
       }
 
-      const ocupado = reservasBD.some((reservaBD) => {
+      const ocupado = reservasActivas.some((reservaBD) => {
         const existenteInicio = new Date(reservaBD.fecha).getTime();
         const existenteFin = existenteInicio + reservaBD.horas * 60 * 60 * 1000;
-
         return nuevoInicio < existenteFin && nuevoFin > existenteInicio;
       });
-
       if (!ocupado) {
         horariosDisponibles.push(horario);
       }
@@ -209,10 +208,10 @@ const getHorariosPorFecha = async (req, res) => {
 
     return res.status(200).json({
       ok: true,
+      message: "Horarios disponibles obtenidos",
       horarios: horariosDisponibles,
     });
   } catch (error) {
-    console.error("Error al obtener horarios:", error);
     return res.status(500).json({
       ok: false,
       message: "Error al obtener horarios",
@@ -221,7 +220,7 @@ const getHorariosPorFecha = async (req, res) => {
   }
 };
 
-const updatePagoReserva = async (req, res) => {
+const actualizarPagoDeReserva = async (req, res) => {
   try {
     const { id } = req.params;
     const { estadoPago, metodoPago } = req.body;
@@ -247,19 +246,18 @@ const updatePagoReserva = async (req, res) => {
       reserva: reservaActualizada,
     });
   } catch (error) {
-    console.log(error);
     return res.status(500).json({
       ok: false,
       message: "Error al actualizar el pago",
+      error: error.message,
     });
   }
 };
 export {
-  registerReserva,
-  getReserva,
-  deleteReserva,
-  getReservasDisponibles,
-  getHorariosPorFecha,
-  getReservasPorUsuario,
-  updatePagoReserva,
+  registrarReserva,
+  removerReserva,
+  obtenerReservasActivas,
+  obtenerHorariosPorFecha,
+  obtenerReservasPorUsuario,
+  actualizarPagoDeReserva,
 };

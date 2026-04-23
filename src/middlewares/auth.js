@@ -4,7 +4,6 @@ import { verifyToken } from "../utils/jwt.js";
 export const authenticate = async (req, res, next) => {
   try {
     const token = req.cookies.token;
-
     if (!token) {
       return res.status(401).json({
         ok: false,
@@ -25,7 +24,6 @@ export const authenticate = async (req, res, next) => {
     req.usuario = user._id.toString();
     next();
   } catch (error) {
-    console.error(error);
     return res.status(401).json({
       ok: false,
       message: "Token invalido o que ya está expirado ⛔",
@@ -43,7 +41,7 @@ export const validarRol = (req, res, next) => {
 
   const rol = req.user.role;
   if (rol !== "admin" && rol !== "superadmin") {
-    return res.status(401).json({
+    return res.status(403).json({
       ok: false,
       message: "No tiene permisos para realizar la acción",
     });
@@ -53,7 +51,7 @@ export const validarRol = (req, res, next) => {
 
 export const validarRolSuperAdmin = (req, res, next) => {
   const rol = req.user.role;
-  if (rol !== "superadmin") {
+  if (!rol || rol !== "superadmin") {
     return res.status(403).json({
       ok: false,
       message:

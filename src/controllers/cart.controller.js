@@ -1,135 +1,141 @@
 import Cart from "../models/Cart.js";
 
-export const getCart = async (req, res) => {
+export const obtenerCarrito = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ usuario: req.user.id }).populate(
+    const carrito = await Cart.findOne({ usuario: req.user._id }).populate(
       "items.producto",
     );
-    if (!cart) return res.json({ items: [], total: 0 });
+    if (!carrito) return res.json({ items: [], total: 0 });
 
-    cart.items.forEach((item) => {
+    carrito.items.forEach((item) => {
       if (item.producto) {
         item.precioUnitario = item.producto.precio;
       }
     });
-
-    cart.calcularTotal();
-    await cart.save();
+    carrito.calcularTotal();
+    await carrito.save();
 
     return res.status(200).json({
       ok: true,
-      cart,
+      message: "Carrito obtenido con exito",
+      cart: carrito,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ ok: false, message: error.message });
   }
 };
 
-export const addToCart = async (req, res) => {
+export const agregarAlCarrito = async (req, res) => {
   try {
     const { productoId, cantidad } = req.body;
     const producto = req.productoEncontrado;
-
-    let cart = await Cart.findOne({ usuario: req.user.id });
-
-    if (!cart) {
-      cart = new Cart({ usuario: req.user.id, items: [] });
+    let carrito = await Cart.findOne({ usuario: req.user._id });
+    if (!carrito) {
+      carrito = new Cart({ usuario: req.user._id, items: [] });
     }
 
-    const itemExistente = cart.items.find(
+    const itemExistente = carrito.items.find(
       (item) => item.producto.toString() === productoId,
     );
-
     if (!itemExistente) {
-      cart.items.push({
+      carrito.items.push({
         producto: productoId,
         cantidad,
         precioUnitario: producto.precio,
       });
 
-      cart.calcularTotal();
-      await cart.save();
+      carrito.calcularTotal();
+      await carrito.save();
     }
 
-    const cartPopulated = await cart.populate("items.producto");
-    res.json(cartPopulated);
+    const carritoActualizado = await carrito.populate("items.producto");
+    res.json({
+      ok: true,
+      message: "Carrito actualizado con exito",
+      cart: carritoActualizado,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ ok: false, message: error.message });
   }
 };
 
-export const removeFromCart = async (req, res) => {
+export const removerDelCarrito = async (req, res) => {
   try {
     const { productoId } = req.params;
-
-    const cart = await Cart.findOne({ usuario: req.user.id });
-
-    if (!cart) {
-      return res.status(404).json({ error: "Carrito no encontrado" });
+    const carrito = await Cart.findOne({ usuario: req.user._id });
+    if (!carrito) {
+      return res
+        .status(404)
+        .json({ ok: false, message: "Carrito no encontrado" });
     }
 
-    cart.items = cart.items.filter(
+    carrito.items = carrito.items.filter(
       (item) => item.producto.toString() !== productoId,
     );
-    cart.calcularTotal();
-    await cart.save();
+    carrito.calcularTotal();
+    await carrito.save();
 
-    const cartPopulated = await cart.populate("items.producto");
-
-    res.json(cartPopulated);
+    const carritoActualizado = await carrito.populate("items.producto");
+    res.status(200).json({
+      ok: true,
+      message: "Producto removido con exito",
+      cart: carritoActualizado,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ ok: false, message: error.message });
   }
 };
 
-export const updateCartItem = async (req, res) => {
+export const actualizarCantidadDeItem = async (req, res) => {
   try {
     const { productoId } = req.params;
     const { cantidad } = req.body;
     const producto = req.productoEncontrado;
-
+    const carrito = await Cart.findOne({ usuario: req.user._id });
+    if (!carrito) {
+      return res.status(404).json({ error: "Carrito no encontrado" });
+    }
     if (!cantidad || cantidad < 1) {
       return res.status(400).json({ error: "La cantidad debe ser mayor a 0" });
     }
 
-    const cart = await Cart.findOne({ usuario: req.user.id });
-    if (!cart) {
-      return res.status(404).json({ error: "Carrito no encontrado" });
-    }
-
-    const item = cart.items.find((i) => i.producto.toString() === productoId);
+    const item = carrito.items.find(
+      (i) => i.producto.toString() === productoId,
+    );
     if (!item) {
-      return res.status(404).json({ error: "Item no encontrado en carrito" });
+      return res
+        .status(404)
+        .json({ error: "El producto no está en el carrito" });
     }
-
     item.cantidad = cantidad;
     item.precioUnitario = producto.precio;
+    carrito.calcularTotal();
+    await carrito.save();
 
-    cart.calcularTotal();
-    await cart.save();
-
-    const cartPopulated = await cart.populate("items.producto");
-
-    res.json(cartPopulated);
+    const carritoActualizado = await carrito.populate("items.producto");
+    res.status(200).json({
+      ok: true,
+      message: "Carrito actualizado con exito",
+      cart: carritoActualizado,
+    });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ ok: false, message: error.message });
   }
 };
 
-export const clearCart = async (req, res) => {
+export const limpiarCarrito = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ usuario: req.user.id });
-
-    if (!cart) {
+    const carrito = await Cart.findOne({ usuario: req.user.id });
+    if (!carrito) {
       return res.status(404).json({ error: "Carrito no encontrado" });
     }
 
-    cart.items = [];
-    cart.total = 0;
-    await cart.save();
+    carrito.items = [];
+    carrito.total = 0;
+    await carrito.save();
 
-    res.json(cart);
+    res.json({ ok: true, message: "Carrito limpiado con exito", carrito });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    res.status(500).json({ ok: false, message: error.message });
   }
 };

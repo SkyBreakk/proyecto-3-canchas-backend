@@ -3,24 +3,30 @@ import { check } from "express-validator";
 import { authenticate, validarRol } from "../middlewares/auth.js";
 import {
   existeCategoriaPorId,
-  handleValidationErrors,
+  ManejarErroresDeValidacion,
 } from "../middlewares/validator.js";
 import {
   actualizarCategoria,
   crearCategoria,
   eliminarCategoria,
-  traerCategoriasPaginado,
+  traerCategorias,
 } from "../controllers/category.controller.js";
 const router = Router();
 
-router.get("/", traerCategoriasPaginado);
+router.get("/", traerCategorias);
 router.post(
   "/",
   [
     authenticate,
     validarRol,
-    check("nombre", "El nombre es obligatorio").notEmpty(),
-    handleValidationErrors,
+    check("nombre")
+      .notEmpty()
+      .withMessage("El nombre es obligatorio")
+      .isLength({ min: 4, max: 20 })
+      .withMessage(
+        "El nombre de la categoria debe tener entre 4 y 20 carácteres",
+      ),
+    ManejarErroresDeValidacion,
   ],
   crearCategoria,
 );
@@ -30,9 +36,15 @@ router.put(
     authenticate,
     validarRol,
     check("id", "El id es requerido y debe ser válido").isMongoId(),
-    check("nombre", "El nombre es obligatorio").notEmpty(),
+    check("nombre")
+      .notEmpty()
+      .withMessage("El nombre es obligatorio")
+      .isLength({ min: 4, max: 20 })
+      .withMessage(
+        "El nombre de la categoria debe tener entre 4 y 20 carácteres",
+      ),
     check("id").custom(existeCategoriaPorId),
-    handleValidationErrors,
+    ManejarErroresDeValidacion,
   ],
   actualizarCategoria,
 );
@@ -43,7 +55,7 @@ router.delete(
     validarRol,
     check("id", "El id no es válido").isMongoId(),
     check("id").custom(existeCategoriaPorId),
-    handleValidationErrors,
+    ManejarErroresDeValidacion,
   ],
   eliminarCategoria,
 );

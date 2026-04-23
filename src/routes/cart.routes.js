@@ -1,24 +1,28 @@
 import { Router } from "express";
 import { authenticate } from "../middlewares/auth.js";
 import {
-  getCart,
-  addToCart,
-  removeFromCart,
-  updateCartItem,
-  clearCart,
+  obtenerCarrito,
+  agregarAlCarrito,
+  removerDelCarrito,
+  actualizarCantidadDeItem,
+  limpiarCarrito,
 } from "../controllers/cart.controller.js";
-import { agregarItemCartValidation } from "../middlewares/validator.js";
+import { validarAgregarItemAlCarrito } from "../middlewares/validator.js";
 
 const router = Router();
 
-router.get("/", authenticate, getCart);
-router.post("/add", [authenticate, ...agregarItemCartValidation()], addToCart);
+router.get("/", authenticate, obtenerCarrito);
+router.post(
+  "/add",
+  [authenticate, ...validarAgregarItemAlCarrito()],
+  agregarAlCarrito,
+);
 router.put(
   "/:productoId",
-  [authenticate, ...agregarItemCartValidation()],
-  updateCartItem,
+  [authenticate, ...validarAgregarItemAlCarrito()],
+  actualizarCantidadDeItem,
 );
-router.delete("/:productoId", [authenticate], removeFromCart);
-router.delete("/", authenticate, clearCart);
+router.delete("/:productoId", [authenticate], removerDelCarrito);
+router.delete("/", authenticate, limpiarCarrito);
 
 export default router;
