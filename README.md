@@ -249,18 +249,6 @@ DELETE /api/reservas/:id           # Cancelar reserva
 | `admin`      | Todo lo de `user` + gestionar productos, ver reservas, moderar usuarios |
 | `superadmin` | Acceso total + gestión de roles, configuración del sistema              |
 
-### Middleware de protección
-
-```js
-// Ejemplo de uso en rutas
-router.get(
-  "/admin",
-  verifyToken, // Verifica JWT válido
-  checkRole(["admin", "superadmin"]), // Verifica rol
-  adminController.dashboard,
-);
-```
-
 ---
 
 ## 💳 Integraciones
