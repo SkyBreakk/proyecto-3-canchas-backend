@@ -146,12 +146,23 @@ const obtenerReservasPorUsuario = async (req, res) => {
       estado: true,
     })
       .populate("cancha", "nombre img precio")
-      .sort({ fecha: -1 });
+      .sort({ fecha: -1 })
+      .lean();
+
+    const reservasFormateadas = reservas.map((reserva) => {
+      if (reserva.fecha instanceof Date) {
+        reserva.fecha = reserva.fecha
+          .toISOString()
+          .split(".")[0]
+          .replace("Z", "");
+      }
+      return reserva;
+    });
 
     res.json({
       ok: true,
       message: "Reservas del usuario obtenidas",
-      reservas,
+      reservas: reservasFormateadas,
     });
   } catch (error) {
     res.status(500).json({
