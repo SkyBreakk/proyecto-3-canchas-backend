@@ -38,7 +38,7 @@ const obtenerProducto = async (req, res) => {
     if (!producto || !producto.estado) {
       return res.status(404).json({
         ok: false,
-        mensaje: "El producto no existe o está inactivo",
+        message: "El producto no existe o está inactivo",
       });
     }
 
@@ -74,7 +74,6 @@ const crearProducto = async (req, res) => {
       img,
       usuario: req.user._id,
     };
-
     const producto = new Producto(datosProducto);
     await producto.save();
 
@@ -109,7 +108,6 @@ const actualizarProducto = async (req, res) => {
       usuario: req.user._id,
     };
     if (nombre) datosActualizados.nombre = nombre.toUpperCase();
-
     const producto = await Producto.findByIdAndUpdate(id, datosActualizados, {
       new: true,
     });
@@ -123,14 +121,15 @@ const actualizarProducto = async (req, res) => {
       .status(200)
       .json({ ok: true, message: "Producto actualizado con éxito", producto });
   } catch (error) {
-    res.status(500).json({ ok: false, message: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error al connectarse con el servidor" });
   }
 };
 
 const removerProducto = async (req, res) => {
   try {
     const { id } = req.params;
-
     const productoBorrado = await Producto.findByIdAndUpdate(
       id,
       { estado: false },

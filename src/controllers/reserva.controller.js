@@ -42,7 +42,6 @@ const registrarReserva = async (req, res) => {
     };
     const nuevaReserva = new Reserva(datosReserva);
     await nuevaReserva.save();
-
     return res.status(201).json({
       ok: true,
       message: "Reserva creada con exito",
@@ -51,7 +50,7 @@ const registrarReserva = async (req, res) => {
   } catch (error) {
     res.status(400).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -64,7 +63,6 @@ const removerReserva = async (req, res) => {
       { estado: false },
       { new: true },
     );
-
     if (!reserva) {
       return res.status(404).json({
         ok: false,
@@ -123,7 +121,6 @@ export const contactoReserva = async (req, res) => {
       message: "Nombre y contacto son campos obligatorios",
     });
   }
-
   try {
     await enviarCorreoDeContacto(nombre, contacto, descripcion);
     return res.status(200).json({
@@ -232,7 +229,6 @@ const actualizarPagoDeReserva = async (req, res) => {
     )
       .populate("usuario", "username email")
       .populate("cancha", "nombre");
-
     if (!reservaActualizada) {
       return res.status(404).json({
         ok: false,

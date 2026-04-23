@@ -34,7 +34,7 @@ const registro = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -82,7 +82,7 @@ const login = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -147,7 +147,7 @@ const verificarEmail = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -192,7 +192,7 @@ const reenviarCodigoDeVerificacion = async (req, res) => {
     } catch (error) {
       return res.status(500).json({
         ok: false,
-        message: error.message,
+        message: "Error al connectarse con el servidor",
       });
     }
 
@@ -203,7 +203,7 @@ const reenviarCodigoDeVerificacion = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -224,7 +224,7 @@ const obtenerPerfil = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -238,7 +238,7 @@ const loginConGoogle = async (req, res) => {
     } catch (error) {
       return res.status(401).json({
         ok: false,
-        message: error.message,
+        message: "Error al connectarse con el servidor",
       });
     }
     const email = tokenDecodificado.email;
@@ -359,7 +359,7 @@ const actualizarPerfil = async (req, res) => {
   } catch (error) {
     return res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -400,7 +400,7 @@ const otorgarRolAdmin = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -429,7 +429,7 @@ const removerRolAdmin = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };

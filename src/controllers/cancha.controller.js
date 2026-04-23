@@ -30,7 +30,7 @@ const registrarCancha = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -69,13 +69,12 @@ const actualizarCancha = async (req, res) => {
       const nombreMayus = nombre.toUpperCase();
       const canchaDuplicada = await Cancha.findOne({
         nombre: nombreMayus,
-        estado: true,
         _id: { $ne: id },
       });
       if (canchaDuplicada) {
         return res.status(400).json({
           ok: false,
-          mensaje: "El nuevo nombre ya está siendo usado por otra cancha",
+          message: "El nuevo nombre ya está siendo usado por otra cancha",
         });
       }
     }
@@ -105,7 +104,7 @@ const actualizarCancha = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };
@@ -132,7 +131,7 @@ const removerCancha = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       ok: false,
-      message: error.message,
+      message: "Error al connectarse con el servidor",
     });
   }
 };

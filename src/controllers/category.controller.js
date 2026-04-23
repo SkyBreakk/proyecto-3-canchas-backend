@@ -23,7 +23,6 @@ const crearCategoria = async (req, res) => {
     };
     const categoria = new Categoria(datosCategoria);
     await categoria.save();
-
     res
       .status(201)
       .json({ ok: true, message: "Categoría guardada", categoria });
@@ -43,7 +42,7 @@ const actualizarCategoria = async (req, res) => {
 
     const nombreMayus = req.body.nombre.toUpperCase();
     const nombreEnUso = await Categoria.findOne({
-      nombreMayus,
+      nombre: nombreMayus,
       _id: { $ne: id },
     });
     if (nombreEnUso) {
@@ -88,7 +87,6 @@ const eliminarCategoria = async (req, res) => {
         message: "No se encontró la categoría para eliminar",
       });
     }
-
     res.status(200).json({
       ok: true,
       message: "Categoria eliminada",

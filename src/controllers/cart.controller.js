@@ -14,14 +14,15 @@ export const obtenerCarrito = async (req, res) => {
     });
     carrito.calcularTotal();
     await carrito.save();
-
     return res.status(200).json({
       ok: true,
       message: "Carrito obtenido con exito",
       cart: carrito,
     });
   } catch (error) {
-    res.status(500).json({ ok: false, message: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error al connectarse con el servidor" });
   }
 };
 
@@ -47,7 +48,6 @@ export const agregarAlCarrito = async (req, res) => {
       carrito.calcularTotal();
       await carrito.save();
     }
-
     const carritoActualizado = await carrito.populate("items.producto");
     res.json({
       ok: true,
@@ -55,7 +55,9 @@ export const agregarAlCarrito = async (req, res) => {
       cart: carritoActualizado,
     });
   } catch (error) {
-    res.status(500).json({ ok: false, message: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error al connectarse con el servidor" });
   }
 };
 
@@ -74,7 +76,6 @@ export const removerDelCarrito = async (req, res) => {
     );
     carrito.calcularTotal();
     await carrito.save();
-
     const carritoActualizado = await carrito.populate("items.producto");
     res.status(200).json({
       ok: true,
@@ -82,7 +83,9 @@ export const removerDelCarrito = async (req, res) => {
       cart: carritoActualizado,
     });
   } catch (error) {
-    res.status(500).json({ ok: false, message: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error al connectarse con el servidor" });
   }
 };
 
@@ -107,11 +110,11 @@ export const actualizarCantidadDeItem = async (req, res) => {
         .status(404)
         .json({ error: "El producto no está en el carrito" });
     }
+
     item.cantidad = cantidad;
     item.precioUnitario = producto.precio;
     carrito.calcularTotal();
     await carrito.save();
-
     const carritoActualizado = await carrito.populate("items.producto");
     res.status(200).json({
       ok: true,
@@ -119,7 +122,9 @@ export const actualizarCantidadDeItem = async (req, res) => {
       cart: carritoActualizado,
     });
   } catch (error) {
-    res.status(500).json({ ok: false, message: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error al connectarse con el servidor" });
   }
 };
 
@@ -133,9 +138,10 @@ export const limpiarCarrito = async (req, res) => {
     carrito.items = [];
     carrito.total = 0;
     await carrito.save();
-
     res.json({ ok: true, message: "Carrito limpiado con exito", carrito });
   } catch (error) {
-    res.status(500).json({ ok: false, message: error.message });
+    res
+      .status(500)
+      .json({ ok: false, message: "Error al connectarse con el servidor" });
   }
 };
