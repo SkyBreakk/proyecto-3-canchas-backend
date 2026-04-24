@@ -103,12 +103,12 @@ export const actualizarCantidadDeItem = async (req, res) => {
     }
 
     const item = carrito.items.find(
-      (i) => i.producto.toString() === productoId,
+      (itemIndividual) => itemIndividual.producto.toString() === productoId,
     );
     if (!item) {
       return res
         .status(404)
-        .json({ error: "El producto no está en el carrito" });
+        .json({ ok: false, message: "El producto no está en el carrito" });
     }
 
     item.cantidad = cantidad;
