@@ -5,15 +5,14 @@ import Reserva from "../models/Reserva.js";
 const registrarReserva = async (req, res) => {
   try {
     const { senia, horas, cancha, fecha } = req.body;
-    let fechaLimpia = new Date(fecha.replace("Z", ""));
-    const fechaLocal = new Date(
-      fechaLimpia.getFullYear(),
-      fechaLimpia.getMonth(),
-      fechaLimpia.getDate(),
-      fechaLimpia.getHours(),
-      fechaLimpia.getMinutes(),
-    );
-
+    const fechaConZona = `${fecha}-03:00`;
+    const fechaObj = new Date(fechaConZona);
+    if (isNaN(fechaObj.getTime())) {
+      return res.status(400).json({
+        ok: false,
+        message: "La fecha enviada no es válida",
+      });
+    }
     const canchaExistente = await Cancha.findById(cancha);
     if (!canchaExistente) {
       return res.status(404).json({
@@ -24,7 +23,7 @@ const registrarReserva = async (req, res) => {
 
     const reservasActivas = await Reserva.find({ estado: true, cancha });
     const reservaSolapada = reservasActivas.some((reserva) => {
-      return reserva.controlSolapamiento(fechaLocal, horas);
+      return reserva.controlSolapamiento(fechaObj, horas);
     });
     if (reservaSolapada) {
       return res.status(400).json({
@@ -37,7 +36,7 @@ const registrarReserva = async (req, res) => {
       usuario: req.user._id,
       cancha,
       senia,
-      fecha: fechaLocal.toISOString(),
+      fecha: fechaObj,
       horas,
     };
     const nuevaReserva = new Reserva(datosReserva);
@@ -92,17 +91,34 @@ const obtenerReservasActivas = async (req, res) => {
     const [total, reservas] = await Promise.all([
       Reserva.countDocuments(filtro),
       Reserva.find(filtro)
-        .skip(desde)
-        .limit(limite)
+        .skip(Number(desde))
+        .limit(Number(limite))
         .populate("usuario", "username")
-        .populate("cancha", "nombre"),
+        .populate("cancha", "nombre")
+        .sort({ fecha: -1 })
+        .lean(),
     ]);
 
+    const reservasFormateadas = reservas.map((reserva) => {
+      if (reserva.fecha) {
+        const fechaSinFormatear = new Date(reserva.fecha);
+        if (!isNaN(fechaSinFormatear.getTime())) {
+          const fechaArgentina = new Date(
+            fechaSinFormatear.getTime() - 3 * 60 * 60 * 1000,
+          );
+          reserva.fecha = fechaArgentina
+            .toISOString()
+            .split(".")[0]
+            .replace("Z", "");
+        }
+      }
+      return reserva;
+    });
     res.status(200).json({
       ok: true,
       message: "Reservas obtenidas con éxito",
       total,
-      reservas,
+      reservas: reservasFormateadas,
     });
   } catch (error) {
     res.status(500).json({
@@ -150,15 +166,20 @@ const obtenerReservasPorUsuario = async (req, res) => {
       .lean();
 
     const reservasFormateadas = reservas.map((reserva) => {
-      if (reserva.fecha instanceof Date) {
-        reserva.fecha = reserva.fecha
-          .toISOString()
-          .split(".")[0]
-          .replace("Z", "");
+      if (reserva.fecha) {
+        const fechaSinFormatear = new Date(reserva.fecha);
+        if (!isNaN(fechaSinFormatear.getTime())) {
+          const fechaArgentina = new Date(
+            fechaSinFormatear.getTime() - 3 * 60 * 60 * 1000,
+          );
+          reserva.fecha = fechaArgentina
+            .toISOString()
+            .split(".")[0]
+            .replace("Z", "");
+        }
       }
       return reserva;
     });
-
     res.json({
       ok: true,
       message: "Reservas del usuario obtenidas",
@@ -192,20 +213,12 @@ const obtenerHorariosPorFecha = async (req, res) => {
     const reservasActivas = await Reserva.find({ estado: true, cancha: id });
     const horariosDisponibles = [];
 
-    const ahora = new Date();
-    const hoyISO = new Date().toISOString().split("T")[0];
-    const esHoy = fecha === hoyISO;
-
     for (const horario of horariosBase) {
-      const nuevoInicio = new Date(`${fecha}T${horario}:00`).getTime();
+      const nuevoInicio = new Date(`${fecha}T${horario}:00-03:00`).getTime();
       const nuevoFin = nuevoInicio + 1 * 60 * 60 * 1000;
-
-      if (esHoy) {
-        continue;
-      }
-
       const ocupado = reservasActivas.some((reservaBD) => {
-        const existenteInicio = new Date(reservaBD.fecha).getTime();
+        const fechaReserva = new Date(reservaBD.fecha);
+        const existenteInicio = fechaReserva.getTime();
         const existenteFin = existenteInicio + reservaBD.horas * 60 * 60 * 1000;
         return nuevoInicio < existenteFin && nuevoFin > existenteInicio;
       });
